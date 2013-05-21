@@ -2,19 +2,17 @@
 
 This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/
 
-A [Redis](http://redis.io) client for GNU/Octave, written in pure Octave, using 
+A [Redis](http://redis.io) client for [GNU/Octave](http://www.gnu.org/software/octave/), written in pure Octave, using 
 [instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) 0.2.0 package.
 
 This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
 
-timeout is static hardcodet to 5ms! maybe you have to enlarge it, special when your redis server is not localhost!
-
 ## ToDo
 
-* redisCommand
+* redisCommand (nor tested nor optimized)
 * handling strings in redisGet
 * make it work with matlab too (far far away)
-* implement SMEMBERS
+* implement SMEMBERS (my needs atm)
 * redisConnect for switching db inside a redis server
 * implement redisPing
 
@@ -58,6 +56,22 @@ redisSet can save single values (1x1 Matrix), a string or a nxn Matrix. But take
 Furthermore, it is important to know, how redis-octave is saving a nxn Matrix in redis. It use RPUSH (a list of values) in redis and reshape 
 in octave. But the first(!) value in the RPUSH list is reservated for the dimension of your Matrix. This is important, if you want to use the 
 values with other applications or programming languages too! 
+
+## usage 
+
+Make a redis connection:
+    R = redisConnection()                 % connect to localhost on port 6739
+    R = redisConnection('foo.com')        % connect to foo.com on port 6739
+    R = redisConnection('foo.com', 4242)  % connect to foo.com on port 4242
+
+Authenticate if needed:
+    status = redisAuth(R,'foobared');
+
+For redisSet are no options. I knows if you want to store a string, a matrice or a single value.
+    status = redisSet(R,'keyName',variablename);
+
+For redisGet are no options too
+    matrix = redisGet(R,'keyName');
 
 # Thanks
 * https://github.com/dac922/
