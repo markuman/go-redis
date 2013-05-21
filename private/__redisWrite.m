@@ -3,7 +3,7 @@ function status = __redisWrite(R, varargin)
   tcp_read (R,1e6,1); % flush
 
   [tmp,len] = cellfun (@__createRedisStr,varargin,"UniformOutput",0);
-  tmp = sprintf ('*%d\r\n%s', sum (cell2mat (len)), strjoin (tmp,''));
+  tmp = sprintf ('*%d\r\n%s', sum (cell2mat (len)), [tmp{:}]);
   status = tcp_write (R,tmp);
   
 end
@@ -27,7 +27,7 @@ function [outstr,celllen] = __createRedisStr (inp)
       inp = num2str (inp, 16);
       inp = strsplit (inp);
       outstr = cellfun (@__strhelper, inp, 'UniformOutput', 0);
-      outstr = strjoin (outstr, '');
+      outstr = [outstr{:}];
     else
       % only for fixed string length
       inp = num2str (inp, 16);
