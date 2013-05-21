@@ -60,17 +60,21 @@ values with other applications or programming languages too!
 ## usage 
 
 Make a redis connection:
+
     R = redisConnection()                 % connect to localhost on port 6739
     R = redisConnection('foo.com')        % connect to foo.com on port 6739
     R = redisConnection('foo.com', 4242)  % connect to foo.com on port 4242
 
 Authenticate if needed:
+
     status = redisAuth(R,'foobared');
 
 For redisSet are no options. I knows if you want to store a string, a matrice or a single value.
+
     status = redisSet(R,'keyName',variablename);
 
 For redisGet are no options too
+
     matrix = redisGet(R,'keyName');
 
 # Thanks
