@@ -1,7 +1,8 @@
 function value = redisAuth(R, passphrase)
 
-lp=length(passphrase);
-tcp_write(R,sprintf("*2\r\n$4\r\nAUTH\r\n$%d\r\n%s\r\n",lp,passphrase));
+__redisWrite(R, 'AUTH', passphrase);
+value = __redisRead(R, 5000);
 
-value=char(tcp_read(R,1000,5)(1:end-2));
-
+if !strcmp(value,"+OK\r\n")
+  warning("redis: auth not successful");
+end
