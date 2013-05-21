@@ -14,14 +14,15 @@ else
     reply(reply==13)=[];
     tmp = strsplit (reply, char(10));
     eval (sprintf ("dim = [%s];",tmp{3}));
-    tmp = str2num ( strvcat ({tmp{5:2:end}}));
+    tmp = str2double ({tmp{5:2:end}});
     value = reshape (tmp,dim);
 
   else
     __redisWrite (R, 'GET', key); 
-	value = __redisRead (R, 5000);
+    value = __redisRead (R, 5000);
 
-	value = num2str (strsplit (value,'\r\n'){2});
+    reply(reply==13)=[];
+    value = num2str (strsplit (value,char(10)){2});
 
   end
 end
