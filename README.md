@@ -52,7 +52,7 @@ timeout is static hardcodet to 5ms! maybe you have to enlarge it, special when y
     Elapsed time is 10.5486 seconds.
     octave:231> 
 
-## redisSet and redisSet
+## redisSet and redisGet
 
 redisSet can save single values (1x1 Matrix), a string or a nxn Matrix. But take care, reading a string (redisGet) is not implemented yet!
 Furthermore, it is important to know, how redis-octave is saving a nxn Matrix in redis. It use RPUSH (a list of values) in redis and reshape 
