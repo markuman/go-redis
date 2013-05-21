@@ -61,8 +61,8 @@ values with other applications or programming languages too!
 
 Make a redis connection:
 
-    R = redisConnection()                 % connect to localhost on port 6739
-    R = redisConnection('foo.com')        % connect to foo.com on port 6739
+    R = redisConnection()                 % connect to localhost on port 6379
+    R = redisConnection('foo.com')        % connect to foo.com on port 6379
     R = redisConnection('foo.com', 4242)  % connect to foo.com on port 4242
 
 Authenticate if needed:
