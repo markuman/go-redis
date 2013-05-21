@@ -8,47 +8,48 @@ This client works by establishing a TCP connection to the specified Redis server
 
 timeout is static hardcodet to 5ms! maybe you have to enlarge it, special when your redis server is not localhost!
 
-## Working
-
-* redisConnect
-* redisSet 
-* redisGet 
-* redisAuth
-
-## Not working
-
-* redisGet (For reading strings!)
-
-## Not tested
-
-* redisDisconnection
-
 ## ToDo
 
 * redisCommand
-* vectorize redisSet for storing matrice (it has got a poore performance for huge matrices atm!)
 * handling strings in redisGet
-* make it work with matlab too
+* make it work with matlab too (far far away)
 * implement SMEMBERS
-* improve dynamic timeouts
+* redisConnect for switching db inside a redis server
 
 # Example
 
-    octave:459> clear all
-    octave:460> R=redisConnection();
-    octave:461> redisAuth(R,'foobared');
-    octave:462> m=rand(10,10);
-    octave:463> format long g
-    octave:464> sum(sum(m))
-    ans =     50.6336480069586
-    octave:465> redisSet(R,'matrix5',m);
-    octave:466> redisSet(R,'singleValue5',sum(sum(m)));
-    octave:467> clear m
-    octave:468> newm=redisGet(R,'matrix5');
-    octave:469> sum(sum(newm))
-    ans =     50.6336480069586
-    octave:470> oldmsum=redisGet(R,'singleValue5')
-    oldmsum =     50.6336480069586
+octave:222> clear all
+octave:223> R=redisConnection();
+octave:224> redisAuth(R,'foobared');
+octave:225> e=rand(7,3)
+e =
+
+   0.708814   0.396919   0.453007
+   0.298450   0.194896   0.999266
+   0.408579   0.816589   0.423225
+   0.665347   0.174414   0.443947
+   0.965165   0.565233   0.143128
+   0.670602   0.337784   0.923062
+   0.269081   0.138536   0.064445
+
+octave:226> redisSet(R,'e',e);
+octave:227> w=redisGet(R,'e');
+octave:228> w          
+w =
+
+   0.708814   0.396919   0.453007
+   0.298450   0.194896   0.999266
+   0.408579   0.816589   0.423225
+   0.665347   0.174414   0.443947
+   0.965165   0.565233   0.143128
+   0.670602   0.337784   0.923062
+   0.269081   0.138536   0.064445
+
+octave:229> t=rand(1000,1000);
+octave:230> tic, redisSet(R,'t',t); toc
+Elapsed time is 10.5486 seconds.
+octave:231> 
+
 
 # Thanks
 * https://github.com/dac922/
