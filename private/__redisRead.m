@@ -45,7 +45,7 @@ function reply = __redisRead(R, timeout, looptime=100)
    
     % multi bulk reply, not binary, not integer safe !
     if rtype == '*' && lines > 0
-      bulkreplies = str2num (strsplit (reply, '\r\n'){1}(2:end));    % interprete first line
+      bulkreplies = str2num (strsplit (reply, "\n"){1}(2:end));    % interprete first line
       if lines > 2 * bulkreplies
         break;
       end
