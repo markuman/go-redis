@@ -62,14 +62,14 @@ values with other applications or programming languages too!
 Make a redis connection:
 
     R = redisConnection()                 % connect to localhost on port 6379
-    R = redisConnection('foo.com')        % connect to foo.com on port 6379
+    R = redisConnection('192.168.1.1')        % connect to 192.168.1.1 on port 6379
     R = redisConnection('foo.com', 4242)  % connect to foo.com on port 4242
 
 Authenticate if needed:
 
-    status = redisAuth(R,'foobared');
+    status = redisAuth(R,'password');
 
-For redisSet are no options. I knows if you want to store a string, a matrice or a single value.
+For redisSet are no options. It knows if you want to store a string, a matrice or a single value.
 
     status = redisSet(R,'keyName',variablename);
 
