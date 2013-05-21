@@ -7,7 +7,7 @@ else
   if 1 == iscell(value)
 	disp('ERROR: cells are not supported!');
   elseif 1 < size(value,1) || 1 < size(value,2)
-	dim=sprintf('%d ' ,size(value,2)); % save original dimensions
+	dim=sprintf('%d ' ,size(value)); % save original dimensions
         % do not append, DEL and recreate!
         __redisWrite(R, 'EXISTS', key);
         status=__redisRead(R, 5000);

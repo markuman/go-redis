@@ -13,15 +13,8 @@ else
 
     reply(reply==13)=[];
     tmp = strsplit (reply, char(10));
-%    tmp = strsplit (reply,'\r\n');
-%tmp = cell2mat ({tmp{5:2:end}})
-%for i=4:2:size(in.n,2)-1
-%		tmp(((i/2)-1),1)=str2num(in.char(in.n(1,i)+1:in.n(1,i+1)-2));
-%	end
     eval (sprintf ("dim = [%s];",tmp{3}));
-%    tmp = str2num (strjoin ({tmp{5:2:end}}));
-    tmp = cellfun(@str2num, tmp, 'UniformOutput', false);
-    tmp = cell2mat (tmp)(2:end);
+    tmp = str2num ( strvcat ({tmp{5:2:end}}));
     value = reshape (tmp,[],dim);
 
   else
