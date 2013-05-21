@@ -2,7 +2,7 @@
 
 This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/
 
-A [Redis](http://redis.io) client for GNU/Octave, written in pure Octave, using instrumen-control 0.2.0 package.  Markus Bergholz, markuman@gmail.com 05/2013.
+A [Redis](http://redis.io) client for GNU/Octave, written in pure Octave, using instrumen-control 0.2.0 package.
 
 This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
 
