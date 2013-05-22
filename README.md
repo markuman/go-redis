@@ -2,7 +2,7 @@
 
 This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/
 
-A [Redis](http://redis.io) client for [GNU/Octave](http://www.gnu.org/software/octave/), written in pure Octave, using 
+A [Redis](http://redis.io) client for [GNU/Octave](http://www.gnu.org/software/octave/), written in pure Octave (current stable 3.6.4), using 
 [instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) 0.2.0 package.
 
 This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
@@ -43,10 +43,10 @@ This client works by establishing a TCP connection to the specified Redis server
        0.670602   0.337784   0.923062
        0.269081   0.138536   0.064445
    
-    octave:229> t=rand(1000,1000);
+    octave:229> t=rand(1000,1000); 
     octave:230> tic, redisSet(R,'t',t); toc
     Elapsed time is 10.5486 seconds.
-    octave:231> 
+    octave:231> %% THIS WERE 1000000 values! (small AMD E450 CPU)
 
 ## redisSet and redisGet
 
@@ -77,7 +77,7 @@ For redisGet are no options too
 
 To test the connection to redis server or keep alive your session, you can use redisPing
 
-    pong = redisPong(R)
+    pong = redisPing(R)
 
 To change the database on the connected redis server, use redisSelect. By default, redisConnection connects to database 0, whitch is the first 
 database
