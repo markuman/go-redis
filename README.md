@@ -2,10 +2,12 @@
 
 This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/
 
-A [Redis](http://redis.io) client for [GNU/Octave](http://www.gnu.org/software/octave/), written in pure Octave (current stable 3.6.4), using 
+A [Redis](http://redis.io) client for [GNU/Octave](http://www.gnu.org/software/octave/), written in pure Octave, using 
 [instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) 0.2.0 package.
 
 This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
+
+Written and tested with octave 3.6.4 and redis 2.6.13
 
 ## ToDo
 
