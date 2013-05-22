@@ -13,8 +13,6 @@ This client works by establishing a TCP connection to the specified Redis server
 * handling strings in redisGet
 * make it work with matlab too (far far away)
 * implement SMEMBERS (my needs atm)
-* redisConnect for switching db inside a redis server
-* implement redisPing
 
 # Example
 
@@ -76,6 +74,16 @@ For redisSet are no options. It knows if you want to store a string, a matrice o
 For redisGet are no options too
 
     matrix = redisGet(R,'keyName');
+
+To test the connection to redis server or keep alive your session, you can use redisPing
+
+    pong = redisPong(R)
+
+To change the database on the connected redis server, use redisSelect. By default, redisConnection connects to database 0, whitch is the first 
+database
+
+    feedback = redisSelect(R,1);
+
 
 # Thanks
 * https://github.com/dac922/
