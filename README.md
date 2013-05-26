@@ -2,7 +2,7 @@
 
 This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/
 
-A [Redis](http://redis.io) client for [GNU/Octave](http://www.gnu.org/software/octave/), written in pure Octave, using 
+A [Redis](http://redis.io) client for [GNU Octave](http://www.gnu.org/software/octave/), written in pure Octave, using 
 [instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) 0.2.0 package.
 
 This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
@@ -11,7 +11,6 @@ Written and tested with octave 3.6.4 and redis 2.6.13
 
 ## ToDo
 
-* redisCommand (nor tested nor optimized)
 * handling strings in redisGet
 * make it work with matlab too (far far away)
 * implement SMEMBERS (my needs atm)
@@ -85,6 +84,29 @@ To change the database on the connected redis server, use redisSelect. By defaul
 database
 
     feedback = redisSelect(R,1);
+
+With redisCommand you can use any command with redis. But the output is raw! You just want to use this for debugging. At least, you need two 
+or three arguments!
+e.g. for redis 127.0.0.1:6379> keys *
+
+    octave:6> redisCommand(R,'keys', '*')
+    ans = *2             
+    $6
+    SportB
+    $6
+    SportA
+
+e.g. for redis 127.0.0.1:6379> LLEN SportB
+(integer) 3
+
+    octave:9> redisCommand(R,'LLEN', 'SportB')
+    ans = :3   
+
+e.g. for redis 127.0.0.1:6379> ping
+PONG
+
+    octave:10> redisCommand(R,'PING')
+    ans = +PONG 
 
 
 # Thanks
