@@ -19,10 +19,10 @@ else
 
   else
     __redisWrite (R, 'GET', key); 
-    value = __redisRead (R, 5000);
+    reply = __redisRead (R, 5000);
 
     reply(reply==13)=[];
-    value = num2str (strsplit (value,char(10)){2});
+    value = num2str (strsplit (reply,char(10)){2});
 
   end
 end
