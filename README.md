@@ -97,11 +97,14 @@ Increase or Decrease Integer Values
 Rename or moving keys
 
     redisRename(R,'oldkeyname','newkeyname'); 
-    redisMove(R,'keyname',2); % Moves 'keyname' from the selected database to the 2nd database
+    redisMove(R,'keyname',2); % Moves 'keyname' from the selected database to the 3rd database
 
 To get the size of the database
 
     value = redisDBsize(R);
+
+Synchronously save the dataset to disk
+    reply = redisSave(R);
 
 With redisCommand you can use any command with redis. But the output is raw! So you have to parse the output by yourself (redis protocol)! You 
 just want to use this for debugging. At least, you need two or three arguments (atm very limited)!
