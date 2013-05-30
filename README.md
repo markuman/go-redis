@@ -104,6 +104,7 @@ To get the size of the database
     value = redisDBsize(R);
 
 Synchronously save the dataset to disk
+
     reply = redisSave(R);
 
 With redisCommand you can use any command with redis. But the output is raw! So you have to parse the output by yourself (redis protocol)! You 
