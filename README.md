@@ -1,19 +1,23 @@
-# redis-octave beta
+# redis-octave
 
-This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/
+This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/ But take care, redis-octave has the bigger 
+functionality! :)
 
 A [Redis](http://redis.io) client for [GNU Octave](http://www.gnu.org/software/octave/), written in pure Octave, using 
 [instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) 0.2.0 package.
 
 This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
+It's fast. It writes 1*10^6 Values in ~10 seconds (tested on AMD E-450) on localhost.
 
-Written and tested with octave 3.6.4 and redis 2.6.13
+Written and tested:
+* octave 3.6.4 
+* instrument-control 0.2.0
+* redis 2.6.13
 
 ## ToDo
 
 * handling strings in redisGet
 * make it work with matlab too (far far away)
-* implement SMEMBERS (my needs atm)
 
 # Example
 
@@ -49,19 +53,19 @@ Written and tested with octave 3.6.4 and redis 2.6.13
     Elapsed time is 10.5486 seconds.
     octave:231> %% THIS WERE 1000000 values! (small AMD E450 CPU)
 
-## redisSet and redisGet
+## redisSet and redisGet in redis-octave
 
 redisSet can save single values (1x1 Matrix), a string or a nxn Matrix. But take care, reading a string (redisGet) is not implemented yet!
 Furthermore, it is important to know, how redis-octave is saving a nxn Matrix in redis. It use RPUSH (a list of values) in redis and reshape 
 in octave. But the first(!) value in the RPUSH list is reservated for the dimension of your Matrix. This is important, if you want to use the 
-values with other applications or programming languages too! 
+values with other applications or programming languages too! E.g. for 4x7 Matrix, the first Value is "4 7 ".
 
 ## usage 
 
 Make a redis connection:
 
     R = redisConnection()                 % connect to localhost on port 6379
-    R = redisConnection('192.168.1.1')        % connect to 192.168.1.1 on port 6379
+    R = redisConnection('192.168.1.1')    % connect to 192.168.1.1 on port 6379
     R = redisConnection('foo.com', 4242)  % connect to foo.com on port 4242
 
 Authenticate if needed:
@@ -76,35 +80,52 @@ For redisGet are no options too
 
     matrix = redisGet(R,'keyName');
 
-To test the connection to redis server or keep alive your session, you can use redisPing
+To test the connection or keep your session alive, you can use redisPing
 
     pong = redisPing(R)
 
 To change the database on the connected redis server, use redisSelect. By default, redisConnection connects to database 0, whitch is the first 
 database
 
-    feedback = redisSelect(R,1);
+    feedback = redisSelect(R,2); % Connects to the 3rd database
 
-With redisCommand you can use any command with redis. But the output is raw! You just want to use this for debugging. At least, you need two 
-or three arguments!
-e.g. for redis 127.0.0.1:6379> keys *
+Increase or Decrease Integer Values
 
-    octave:6> redisCommand(R,'keys', '*')
+    redisIncr(R,'keyname'); % just increase a value without feedback
+    tmp = redisDecr(R,'keyname'); % decrease a value and asign the new value to 'tmp' variable in octave
+
+Rename or moving keys
+
+    redisRename(R,'oldkeyname','newkeyname'); 
+    redisMove(R,'keyname',2); % Moves 'keyname' from the selected database to the 2nd database
+
+To get the size of the database
+
+    value = redisDBsize(R);
+
+With redisCommand you can use any command with redis. But the output is raw! So you have to parse the output by yourself (redis protocol)! You 
+just want to use this for debugging. At least, you need two or three arguments (atm very limited)!
+
+    redis 127.0.0.1:6379[1]> keys *
+    1) "test"
+    2) "wurst"
+    ----
+    octave:7> redisCommand(R,'keys','*')
     ans = *2             
-    $6
-    SportB
-    $6
-    SportA
+    $4
+    test
+    $5
+    wurst
 
-e.g. for redis 127.0.0.1:6379> LLEN SportB
-(integer) 3
-
+    redis 127.0.0.1:6379> LLEN SportB
+    (integer) 3
+    ----
     octave:9> redisCommand(R,'LLEN', 'SportB')
     ans = :3   
 
-e.g. for redis 127.0.0.1:6379> ping
-PONG
-
+    redis 127.0.0.1:6379> ping
+    PONG
+    ----
     octave:10> redisCommand(R,'PING')
     ans = +PONG 
 
