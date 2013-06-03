@@ -1,4 +1,6 @@
-# redis-octave
+# go-redis
+
+go-redis - The GNU Octave redis client
 
 This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/ But take care, redis-octave has the bigger 
 functionality! :)
