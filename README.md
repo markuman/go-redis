@@ -2,11 +2,10 @@
 
 go-redis - The GNU Octave redis client
 
-This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/ But take care, redis-octave has the bigger 
-functionality! :)
+This package is ~basically syntax compatible to https://raw.github.com/dantswain/redis-matlab/ But take care, go-redis has the bigger functionality! :)
 
 A [Redis](http://redis.io) client for [GNU Octave](http://www.gnu.org/software/octave/), written in pure Octave, using 
-[instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) 0.2.0 package.
+[instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) package.
 
 This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
 It's fast. It writes 1*10^6 Values in ~10 seconds (tested on AMD E-450) on localhost.
@@ -18,7 +17,6 @@ Written and tested:
 
 ## ToDo
 
-* handling strings in redisGet
 * make it work with matlab too (far far away)
 
 # Example
@@ -55,10 +53,10 @@ Written and tested:
     Elapsed time is 10.5486 seconds.
     octave:231> %% THIS WERE 1000000 values! (small AMD E450 CPU)
 
-## redisSet and redisGet in redis-octave
+## redisSet and redisGet in go-redis
 
-redisSet can save single values (1x1 Matrix), a string or a nxn Matrix. But take care, reading a string (redisGet) is not implemented yet!
-Furthermore, it is important to know, how redis-octave is saving a nxn Matrix in redis. It use RPUSH (a list of values) in redis and reshape 
+redisSet can save single values (num or str) or Numeric n-dimension Matrix. 
+Furthermore, it is important to know, how go-redis is saving n-dimension Matrix. It use RPUSH (a list of values) in redis and reshape 
 in octave. But the first(!) value in the RPUSH list is reservated for the dimension of your Matrix. This is important, if you want to use the 
 values with other applications or programming languages too! E.g. for 4x7 Matrix, the first Value is "4 7 ".
 
