@@ -22,7 +22,10 @@ else
     reply = __redisRead (R, 5000);
 
     reply(reply==13)=[];
-    value = num2str (strsplit (reply,char(10)){2});
+    value = strsplit(reply,char(10)){2};
+    if 1 == __isnum(value)
+      value = str2num (value);
+    end
 
   end
 end
