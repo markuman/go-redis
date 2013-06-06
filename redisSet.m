@@ -9,10 +9,10 @@ else
   elseif 1 == ischar(value)
         __redisWrite(R, 'SET',key,value);
         status=__redisRead(R, 5000);
-  elseif 1 == size(value,1) && 1 == size(value,2) && 1 == isnumeric (value)
+  elseif 1 == numel(value)
 	__redisWrite(R, 'SET', key, value);
         status=__redisRead(R, 5000);
-  elseif 2 <= ndims(value)
+  else % it's a matrix...i hope so!
 	dim=sprintf('%d ' ,size(value)); % save original dimensions
         % do not append, DEL and recreate!
         __redisWrite(R, 'EXISTS', key);
@@ -27,7 +27,5 @@ else
 
 	__redisWrite(R, 'RPUSH', key, value(:));
 	status=[status __redisRead(R, 5000)];
-  else
-	disp('ERROR: I do not understand what you are traing so save!')
   end
 end
