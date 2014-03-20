@@ -1,4 +1,4 @@
-function status = __redisWrite(R, varargin)
+function status = redisWrite(R, varargin)
 
   tcp_read (R,1e6,1); % flush
 
