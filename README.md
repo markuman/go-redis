@@ -12,7 +12,7 @@ It's fast. It writes 1*10^6 Values in ~10 seconds (tested on AMD E-450) on local
 
 # Versions
 
-### Redis-git [developer Version]
+### go-redis [developer Version]
 
     git clone https://github.com/markuman/go-redis.git
 
@@ -20,7 +20,7 @@ It's fast. It writes 1*10^6 Values in ~10 seconds (tested on AMD E-450) on local
  * some improvements + matlab compatibility (maybe, maybe not...not finished yet)
  
 
-### Redis 1.0 [stable]
+### go-redis 1.0 [stable]
 
     git clone https://github.com/markuman/go-redis.git && cd go-redis
     git checkout b8b6b1d
