@@ -1,8 +1,10 @@
 function pong = redisPing(R)
 
-__redisWrite(R, 'PING');
-pong = __redisRead(R, 5000);
+redisWrite(R, 'PING');
+pong = redisRead(R, 5000);
 
-if !strcmp(pong,"+PONG\r\n")
+if ~strcmp(pong,'+PONG\r\n')
   warning('redis do not respond!');
+end
+
 end

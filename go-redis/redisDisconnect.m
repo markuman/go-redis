@@ -1,6 +1,6 @@
 function r = redisDisconnect(R)
 
-__redisWrite(R, 'QUIT');
+redisWrite(R, 'QUIT');
 
 % output is irrelavant, because redis reply +ok in any case while QUIT
 % Futhermore, __redisWrite flush it (line 3) when calling
@@ -8,3 +8,4 @@ __redisWrite(R, 'QUIT');
 
  tcp_close(R);
 
+end

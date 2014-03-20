@@ -1,5 +1,7 @@
 function value = redisIncr(R, key)
 
-  __redisWrite (R, 'INCR', key);
-  value=__redisRead (R, 5000);
+  redisWrite (R, 'INCR', key);
+  value=redisRead (R, 5000);
+
+end
 
