@@ -8,6 +8,10 @@ switch nargin
         port=6379;
 end
 
-r = tcp(host, port);
+if exist ('OCTAVE_VERSION')~=0
+	r = tcp(host, port);
+else
+	r = tcpip(host, port);
+end
 
 end
