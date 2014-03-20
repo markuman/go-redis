@@ -24,8 +24,11 @@ end
   lastread = 0;
   ## FIXME
   # fflush for matlab ...
-  fprintf(stdout,'\r');fflush(stdout);
-  
+  if exist ('OCTAVE_VERSION')~=0
+    fprintf(stdout,'\r');fflush(stdout);
+  else
+    fprintf(stdout,'\r');drawnow('update');
+  end
   % read complete response
   while (tic-start < timeout*1000) 
     fprintf(stdout,'%d', lastread); fflush(stdout);
