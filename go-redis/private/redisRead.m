@@ -1,4 +1,4 @@
-function reply = __redisRead(R, timeout, looptime)
+function reply = redisRead(R, timeout, looptime)
 
 switch nargin
     case ~3
