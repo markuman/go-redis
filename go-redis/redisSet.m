@@ -16,7 +16,7 @@ else
 	dim=sprintf('%d ' ,size(value)); % save original dimensions
         % do not append, DEL and recreate!
         redisWrite(R, 'EXISTS', key);
-        status=__redisRead(R, 5000);
+        status=redisRead(R, 5000);
         if strfind (status,':1') == 1
                 warning('Your choosen variable already exist in redis and will be overwritten!')
                 redisWrite(R, 'DEL', key);
@@ -28,7 +28,4 @@ else
 	redisWrite(R, 'RPUSH', key, value(:));
 	status=[status redisRead(R, 5000)];
   end
-end
-
-
 end

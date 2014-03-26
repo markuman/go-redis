@@ -20,11 +20,12 @@ else
   else
     redisWrite (R, 'GET', key);
     reply = redisRead (R, 5000);
-
     reply(reply==13)=[];
-    value = strsplit(reply,char(10)){2};
+
+    value = strsplit(reply,char(10));
+    value = value{2};
     if 1 == isnum(value)
-      value = str2double (value);
+      value = str2num (value);
     end
 
   end

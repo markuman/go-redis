@@ -8,4 +8,3 @@ redisWrite(R, 'QUIT');
 
  tcp_close(R);
 
-end

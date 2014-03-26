@@ -1,14 +1,13 @@
 function reply = redisRead(R, timeout, looptime)
 
-switch nargin
-    case ~3
-	looptime=100;
+if nargin < 3
+  looptime=100;
 end
 
   start=tic;
 
   % get reply type
-  rtype = char (tcp_read (R,1,timeout));   % minimum read count = 3 (status byte, \r\n)
+  rtype = char (fread (R,1,timeout));   % minimum read count = 3 (status byte, \r\n)
   reply = rtype;
 
   if isempty (rtype)
@@ -22,18 +21,13 @@ end
 
 
   lastread = 0;
-  ## FIXME
-  # fflush for matlab ...
-  if exist ('OCTAVE_VERSION')~=0
-    fprintf(stdout,'\r');fflush(stdout);
-  else
-    fprintf(stdout,'\r');drawnow('update');
-  end
+  fprintf(stdout,'\r');flush_stdout;
+  
   % read complete response
   while (tic-start < timeout*1000) 
-    fprintf(stdout,'%d', lastread); fflush(stdout);
+    fprintf(stdout,'%d', lastread); flush_stdout;
     
-    reply = [reply char (tcp_read (R,1000000,looptime))];
+    reply = [reply char (fread (R,1000000,looptime))];
     % if read at least one byte, increase timeout
     if lastread < length(reply)
       timeout = timeout + looptime*1.5;
@@ -42,7 +36,7 @@ end
 
     fprintf(stdout,'                    \r');
 
-    lines = length (strfind (reply, '\r\n'));
+    lines = length (strfind (reply, char([13 10])));
     % break after first line for error, status and integer replies
     if (rtype == '+' || rtype == '-' || rtype == ':') && lines > 0
       break;
@@ -55,7 +49,8 @@ end
    
     % multi bulk reply, not binary, not integer safe !
     if rtype == '*' && lines > 0
-      bulkreplies = str2double (strsplit (reply, '\n'){1}(2:end));    % interprete first line
+      bulkreplies = str2num (strsplit (reply, '\n'));    % interprete first line
+      bulkreplies = bulkreplies{1}(2:end);
       if lines > 2 * bulkreplies
         break;
       end
@@ -64,3 +59,12 @@ end
   end
 
 end
+
+function flush_stdout ()
+  if exist ('OCTAVE_VERSION')~=0
+    fflush(stdout);
+  else
+    drawnow('update');
+  end
+end
+
