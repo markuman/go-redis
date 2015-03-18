@@ -1,9 +1,9 @@
 # go-redis
 
-go-redis - The GNU Octave redis client 
+go-redis - The GNU Octave redis client
 
 
-A [Redis](http://redis.io) client for [GNU Octave](http://www.gnu.org/software/octave/), written in pure Octave, using 
+A [Redis](http://redis.io) client for [GNU Octave](http://www.gnu.org/software/octave/), written in pure Octave, using
 [instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) package.
 
 This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
@@ -16,9 +16,35 @@ It's fast. It writes 1*10^6 Values in ~10 seconds (tested on AMD E-450) on local
 
     git clone https://github.com/markuman/go-redis.git
 
-* (will be go-redis-2.0 one day)
+ * (will be go-redis-2.0 one day)
  * some improvements + matlab compatibility (maybe, maybe not...not finished yet)
- 
+
+##### mex
+
+redis.c is a `mex` function using [hiredis](https://github.com/redis/hiredis/).
+
+MATLAB
+
+    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -std=c99 -O4 -pedantic -g' redis.c
+
+GNU OCTAVE
+
+    gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared redis.c -o redis.mex
+
+Usage
+
+    octave:1> ret = redis("PING")
+    ret = PONG
+    octave:2> ret = redis(sprintf("SET PI %f", pi))
+    ret = OK
+    octave:3> ret = redis("GET PI")
+    ret = 3.141593
+    octave:4> ret = redis("127.0.0.1", "PING")
+    ret = PONG
+    octave:5> ret = redis("127.0.0.1", 6379, "PING")
+    ret = PONG
+
+
 
 ### go-redis 1.0 [stable]
 
@@ -53,7 +79,7 @@ For set are no options. It knows if you want to store a string, a matrice or a s
 
     status = set(r,'keyName',variablename);
     % if you don't name a keyname, the name of the variable will be taken as keyname
-    status = set(r,variablename); 
+    status = set(r,variablename);
 
 For get are no options too
 
