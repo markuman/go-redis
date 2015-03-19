@@ -1,6 +1,6 @@
 # go-redis
 
-go-redis - **G**NU **O**ctave redis client
+go-redis - **G**NU **O**ctave **redis** client
 
 ...but Matlab is supported too.
 
