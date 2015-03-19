@@ -1,143 +1,113 @@
 # go-redis
 
-go-redis - The GNU Octave redis client
+go-redis - **G**NU **O**ctave redis client
+
+...but Matlab is supported too.
+
+Tested with Linux and Mac OS X.
 
 
-A [Redis](http://redis.io) client for [GNU Octave](http://www.gnu.org/software/octave/), written in pure Octave, using
-[instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) package.
+# Requirements
 
-This client works by establishing a TCP connection to the specified Redis server and using the [Redis protocol](http://redis.io/topics/protocol).
-It's fast. It writes 1*10^6 Values in ~10 seconds (tested on AMD E-450) on localhost.
+* Classdef support
+  * Octave >= 4.0 _yeah, not released yet! :)_
+  * Matlab >= R2012b? _(dunno when classdef was introduced...)_
+* C-Compiler
+* [hiredis library](https://github.com/redis/hiredis/)
+* Linux or Mac OS X _(never tried with Windows)_
 
 
-# Versions
+# Build instructions
 
-### go-redis [developer Version]
+### Matlab
 
-    git clone https://github.com/markuman/go-redis.git
+You can compile it directly in the Matlab commandline.
 
- * (will be go-redis-2.0 one day)
- * some improvements + matlab compatibility (maybe, maybe not...not finished yet)
+    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -std=c99 -O2 -pedantic -g' redis_.c
 
-##### mex
+Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
-redis.c is a `mex` function using [hiredis](https://github.com/redis/hiredis/).
+### GNU Octave
 
-MATLAB
+Best way is to compile it from bash
 
-    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -std=c99 -O4 -pedantic -g' redis.c
+    gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared -O2 redis_.c -o redis_.mex
 
-GNU OCTAVE
+Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
-    gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared redis.c -o redis.mex
+**Currently (3/19/2015) there is a bug in classdef. You have to do `addpath private` in octave as a workaround!**
 
-Usage
 
-    octave:1> ret = redis("PING")
-    ret = PONG
-    octave:2> ret = redis(sprintf("SET PI %f", pi))
-    ret = OK
-    octave:3> ret = redis("GET PI")
-    ret = 3.141593
-    octave:4> ret = redis("127.0.0.1", "PING")
-    ret = PONG
-    octave:5> ret = redis("127.0.0.1", 6379, "PING")
-    ret = PONG
+# limitations & todo
+
+* currently all `redis()` functions needs one output
+* authentication is not supported yet
+* only commands with single output are correctly returns _(like set and get)_. Commands like `scan` or `keys *` results in an empty return
+* write a Makefile and maybe add `hiredis` as a submodule simplify the setup process
 
 
 
-### go-redis 1.0 [stable]
-
-    git clone https://github.com/markuman/go-redis.git && cd go-redis
-    git checkout b8b6b1d
-
-* for Octave >= 3.6, instrument-control >= 0.2, redis >= 2.6
+# usage
 
 
-# Documentation
+##### make a connection
 
-## set and get in go-redis
+        r = redis()
+        r = 
 
-set can save single values (num or str) or numeric n-dimension Matrix _(and structs of depth one)_.
-Furthermore, it is important to know, how go-redis is saving n-dimension Matrix. It use RPUSH (a list of values) in redis and reshape
-in octave. But the first(!) value in the RPUSH list is reservated for the dimension of your Matrix. This is important, if you want to use the
-values with other applications or programming languages too! E.g. for 4x7 Matrix, the first Value is "4 7 ".
+          redis with properties:
 
-## usage
+            hostname: '127.0.0.1'
+                port: 6379
 
-Make a redis connection:
+##### ping the redis server
 
-    r = redis()                 % connect to localhost on port 6379
-    r = redis('192.168.1.1')    % connect to 192.168.1.1 on port 6379
-    r = redis('foo.com', 4242)  % connect to foo.com on port 4242
+        ret = r.ping
 
-Authenticate if needed:
+        ret =
 
-    status = auth(r,'password');
+        PONG
 
-For set are no options. It knows if you want to store a string, a matrice or a single value.
+##### SET
+`r.set(key, value)`  
+value can be a double or a char. doubles will be converted to char.
 
-    status = set(r,'keyName',variablename);
-    % if you don't name a keyname, the name of the variable will be taken as keyname
-    status = set(r,variablename);
+        ret = r.set('go-redis', 1)
 
-For get are no options too
+        ret =
 
-    matrix = get(r,'keyName');
+        OK
 
-To test the connection or keep your session alive, you can use redisPing
+##### INCR & DECR
+`r.incr(key)`  
+if it's fine, return will be empty - same for `r.decr(key)` _(help to improve!)_
 
-    pong = redisPing(r)
+        ret = r.incr('go-redis')
 
-To change the database on the connected redis server, use redisSelect. By default, redisConnection connects to database 0, whitch is the first
-database
+        ret =
 
-    feedback = select(r,2); % Connects to the 3rd database
+             ''
 
-Increase or Decrease Integer Values
+##### GET  
+`r.get(key)`  
+return type will always be a char!
 
-    incr(r,'keyname'); % just increase a value without feedback
-    tmp = decr(r,'keyname'); % decrease a value and asign the new value to 'tmp' variable in octave
+        ret = r.get('go-redis')
 
-Rename or moving keys
+        ret =
 
-    rename(r,'oldkeyname','newkeyname');
+        2
 
-To get the size of the database
-
-    size_of_db = dbsize(r);
-
-Synchronously save the dataset to disk
-
-    reply = save(r);
-
-With command you can use any command with redis. But the output is raw! So you have to parse the output by yourself (redis protocol)! You
-just want to use this for debugging. At least, you need two or three arguments (atm very limited)!
-
-    redis 127.0.0.1:6379[1]> keys *
-    1) "test"
-    2) "wurst"
-    ----
-    octave:7> command(R,'keys','*')
-    ans = *2
-    $4
-    test
-    $5
-    wurst
-
-    redis 127.0.0.1:6379> LLEN SportB
-    (integer) 3
-    ----
-    octave:9> command(R,'LLEN', 'SportB')
-    ans = :3
-
-    redis 127.0.0.1:6379> ping
-    PONG
-    ----
-    octave:10> command(R,'PING')
-    ans = +PONG
+##### CALL
+`r.get(command)`  
+for debugging and functions which are not directly supported by go-redis.
 
 
-# Thanks
-* https://github.com/dac922/
+
+
+# deprecated go-redis version
+
+For the older go-redis version - pure written in Octave using
+[instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) package - do `git checkout fcf757b`
+
 
