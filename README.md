@@ -42,7 +42,7 @@ Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
 * currently all `redis()` functions needs one output
 * authentication is not supported yet
-* only commands with single output are correctly returns _(like set and get)_. Commands like `scan` or `keys *` results in an empty return
+* only commands with a single output are correctly returned _(like set and get)_. Commands like `scan` or `keys *` results in an empty return
 * write a Makefile and maybe add `hiredis` as a submodule simplify the setup process
 
 
