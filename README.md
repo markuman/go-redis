@@ -35,7 +35,8 @@ Best way is to compile it from bash
 
 Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
-**Currently (3/19/2015) there is a bug in classdef. You have to do `addpath private` in octave as a workaround!**
+**Currently (3/19/2015) there is a bug in classdef. You have to do `addpath private` in octave as a workaround!**  
+https://savannah.gnu.org/bugs/?41723
 
 
 # limitations & todo
