@@ -35,13 +35,12 @@ Best way is to compile it from bash
 
 Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
-**Currently (3/19/2015) there is a bug in classdef. You have to do `addpath private` in octave as a workaround!**  
+**Currently (3/19/2015) there is a bug in classdef. You have to do `addpath private` in octave as a workaround!**
 https://savannah.gnu.org/bugs/?41723
 
 
 # limitations & todo
 
-* currently all `redis()` functions needs one output
 * authentication is not supported yet
 * only commands with a single output are correctly returned _(like set and get)_. Commands like `scan` or `keys *` results in an empty return
 * write a Makefile and maybe add `hiredis` as a submodule to simplify the setup process
@@ -54,7 +53,7 @@ https://savannah.gnu.org/bugs/?41723
 ##### make a connection
 
         r = redis()
-        r = 
+        r =
 
           redis with properties:
 
@@ -70,7 +69,7 @@ https://savannah.gnu.org/bugs/?41723
         PONG
 
 ##### SET
-`r.set(key, value)`  
+`r.set(key, value)`
 value can be a double or a char. doubles will be converted to char.
 
         ret = r.set('go-redis', 1)
@@ -80,17 +79,14 @@ value can be a double or a char. doubles will be converted to char.
         OK
 
 ##### INCR & DECR
-`r.incr(key)`  
-if it's fine, return will be empty - same for `r.decr(key)` _(help to improve!)_
+`r.incr(key)`
 
         ret = r.incr('go-redis')
 
-        ret =
+        ret = 2
 
-             ''
-
-##### GET  
-`r.get(key)`  
+##### GET
+`r.get(key)`
 return type will always be a char!
 
         ret = r.get('go-redis')
@@ -100,7 +96,7 @@ return type will always be a char!
         2
 
 ##### CALL
-`r.get(command)`  
+`r.get(command)`
 for debugging and functions which are not directly supported by go-redis.
 
 
