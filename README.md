@@ -2,7 +2,7 @@
 
 go-redis - **G**NU **O**ctave **redis** client
 
-...but Matlab is supported too.
+...but Matlab is supported too. When I doesn't support Matlab, someone else will do and I have to emulate it with Octave.
 
 Tested with Linux and Mac OS X.
 
