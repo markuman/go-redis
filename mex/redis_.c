@@ -43,10 +43,10 @@ char* callRedis(const char *hostname, int port, char *command){
   // error when connection failed
   if (c == NULL || c->err) {
     if (c) {
-      mexErrMsgIdAndTxt("MATLAB:redis:connectionError","Connection error: %s\n", c->errstr);
+      mexErrMsgIdAndTxt("MATLAB:redis_:connectionError","Connection error: %s\n", c->errstr);
       redisFree(c);
     } else {
-      mexErrMsgIdAndTxt("MATLAB:redis:connectionError", "Connection error: can't allocate redis context.");
+      mexErrMsgIdAndTxt("MATLAB:redis_:connectionError", "Connection error: can't allocate redis context.");
     }
     //exit(1);
   }
@@ -70,15 +70,13 @@ void mexFunction (int nlhs, mxArray *plhs[],
   // currently we need at least more than one input and one ouput!!
   // improve me!!
   if(nrhs < 1 && nlhs != 1) {
-    mexErrMsgIdAndTxt( "MATLAB:lua:invalidNumInputs",
+    mexErrMsgIdAndTxt( "MATLAB:redis_:invalidNumInputs",
                       "One or more inputs are required.");
 
 
   } else if ( nrhs == 1) {
     // one input (command), use default host and port
-    if ( !mxIsChar(prhs[0]) ) {
-      mexErrMsgIdAndTxt("MATLAB:redis:nrhs", "Command Input must be a string.");
-    } else {
+    if ( mxIsChar(prhs[0]) ) {
 
       hostname = "127.0.0.1";
       port = 6379;
@@ -89,50 +87,58 @@ void mexFunction (int nlhs, mxArray *plhs[],
 
       plhs[0] = mxCreateString(redisReturn);
 
+    } else {
+      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command Input must be a string.");
 
     }
-    
-  } else if ( nrhs == 2  ) {
-      // two inputs (0. host, 1. command)
-      if ( !mxIsChar(prhs[0])  ||  !mxIsChar(prhs[1]) ) {
-          mexErrMsgIdAndTxt("MATLAB:lua:nrhs", "Command and Hostname Input must be a string.");
-      } else {
-          
-          port = 6379;
-          
-          hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
-          mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
-          
-          command = (char *) mxCalloc(mxGetN(prhs[1])+1, sizeof(char));
-          mxGetString(prhs[1], command, mxGetN(prhs[1])+1);
-          
-          redisReturn = callRedis(hostname, port, command);
-          
-          plhs[0] = mxCreateString(redisReturn);
-          
-      }
-  } else if ( nrhs == 3 ) {
-      // three inputs (0. host, 1. port, 2. command)
-      if ( !mxIsChar(prhs[0])  ||  !mxIsDouble(prhs[1]) || !mxIsChar(prhs[2]) ) {
-          mexErrMsgIdAndTxt("MATLAB:lua:nrhs", "Command and Hostname Input must be a string and Port must be double.");
-      } else {
-          
-          
-          
-          hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
-          mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
-          
-          double* data = mxGetPr(prhs[1]);
-          port = (int)floor(data[0]);
 
-          command = (char *) mxCalloc(mxGetN(prhs[2])+1, sizeof(char));
-          mxGetString(prhs[2], command, mxGetN(prhs[2])+1);
-          
-          redisReturn = callRedis(hostname, port, command);
-          
-          plhs[0] = mxCreateString(redisReturn);
-          
-      }
+  } else if ( nrhs == 2  ) {
+
+    // two inputs (0. host, 1. command) - both strings
+    if ( mxIsChar(prhs[0])  &&  mxIsChar(prhs[1]) ) {
+
+      port = 6379;
+
+      hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
+      mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
+
+      command = (char *) mxCalloc(mxGetN(prhs[1])+1, sizeof(char));
+      mxGetString(prhs[1], command, mxGetN(prhs[1])+1);
+
+      redisReturn = callRedis(hostname, port, command);
+
+      plhs[0] = mxCreateString(redisReturn);
+
+    } else {
+
+      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string.");
+
+    }
+
+  } else if ( nrhs == 3 ) {
+
+    // three inputs (0. host, 1. port, 2. command)
+    if ( mxIsChar(prhs[0])  &&  mxIsDouble(prhs[1]) && mxIsChar(prhs[2]) ) {
+
+      hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
+      mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
+
+      // convert double to integer
+      double* data = mxGetPr(prhs[1]);
+      port = (int)floor(data[0]);
+
+      command = (char *) mxCalloc(mxGetN(prhs[2])+1, sizeof(char));
+      mxGetString(prhs[2], command, mxGetN(prhs[2])+1);
+
+      redisReturn = callRedis(hostname, port, command);
+
+      plhs[0] = mxCreateString(redisReturn);
+
+    } else {
+
+      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string and Port must be double.");
+
+    }
   }
 }
 
