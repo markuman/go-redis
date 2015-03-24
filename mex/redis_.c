@@ -2,10 +2,10 @@
 
 /*
  * MATLAB
- * mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -std=c99 -O4 -pedantic -g' redis.c
+ * mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -std=c99 -O4 -pedantic -g' redis_.c
  *
  * GNU OCTAVE
- * gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared redis.c -o redis.mex
+ * gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared redis_.c -o redis_.mex
  */
 
 // C specific includes
@@ -27,10 +27,13 @@ char* redisReturn;
 char *hostname;
 int port;
 char *command;
+char redisChar[19];
 
 
 // call Redis function
 char* callRedis(const char *hostname, int port, char *command){
+
+  //char *redisChar;
 
   // hiredis declaration
   redisContext *c;
@@ -52,12 +55,27 @@ char* callRedis(const char *hostname, int port, char *command){
   }
 
   reply = redisCommand(c, command);
-  //freeReplyObject(reply);
 
-  /* Disconnects and frees the context */
-  //redisFree(c);
+  if (reply->type == REDIS_REPLY_STRING) {
+    return reply->str;
+  } else if (reply->type == REDIS_REPLY_ARRAY) {
+    mexPrintf("redis result type ARRAY is not supported yet, but the command was successfull");
+  } else if (reply->type == REDIS_REPLY_INTEGER) {
 
-  return reply->str;
+    long long int t = reply->integer;
+
+    snprintf(redisChar, 19, "%lld",t);
+    freeReplyObject(reply);
+    redisFree(c);
+
+    return redisChar;
+
+  } else {
+
+    return reply->str;
+  }
+
+
 }
 
 
