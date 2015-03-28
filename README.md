@@ -31,7 +31,7 @@ Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
 Best way is to compile it from bash
 
-    gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared -O2 redis_.c -o redis_.mex
+    gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
 
 Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
@@ -42,7 +42,6 @@ https://savannah.gnu.org/bugs/?41723
 # limitations & todo
 
 * authentication is not supported yet
-* only commands with a single output are correctly returned _(like set and get)_. Commands like `scan` or `keys *` results in an empty return
 * write a Makefile and maybe add `hiredis` as a submodule to simplify the setup process
 
 
@@ -95,8 +94,19 @@ return type will always be a char!
 
         2
 
+##### array reply
+An array reply will be transformed into a cell array in Octave/Matlab.
+
+        octave:2> r.call('keys *')
+        ans =
+        {
+          [1,1] = b
+          [2,1] = A
+        }
+
+
 ##### CALL
-`r.get(command)`
+`r.call(command)`
 for debugging and functions which are not directly supported by go-redis.
 
 
