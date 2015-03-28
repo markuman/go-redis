@@ -2,10 +2,10 @@
 
 /*
  * MATLAB
- * mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -std=c99 -O4 -pedantic -g' redis_.c
+ * mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -std=c99 -O4 -pedantic -g' redis_.c
  *
  * GNU OCTAVE
- * gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared redis_.c -o redis_.mex
+ * gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared redis_.c -o redis_.mex
  */
 
 // C specific includes
@@ -22,12 +22,14 @@
 // Matlab/GNU Octave specific includes
 #include <mex.h>
 
-// preallocate some stuff
+// declarate some stuff
 char* redisReturn;
 char *hostname;
 int port;
 char *command;
-char redisChar[19];
+char redisChar[19]; // afaik long enough for long long int
+mxArray *cell_array_ptr;
+int k = 0;
 
 
 // call Redis function
@@ -54,17 +56,39 @@ char* callRedis(const char *hostname, int port, char *command){
     //exit(1);
   }
 
+  // call redis
   reply = redisCommand(c, command);
 
+  // check the output
   if (reply->type == REDIS_REPLY_STRING) {
     return reply->str;
+    
   } else if (reply->type == REDIS_REPLY_ARRAY) {
-    mexPrintf("redis result type ARRAY is not supported yet, but the command was successfull");
+    // get number of elements
+    int n = (int)floor(reply->elements);
+    // outout will be a cell array matlab-sided
+    cell_array_ptr = mxCreateCellMatrix(n,1);
+
+    for (unsigned int j = 0; j < reply->elements; j++) {
+        //mexPrintf("%u) %s\n", j, reply->element[j]->str);
+        mxSetCell(cell_array_ptr,j, mxCreateString(reply->element[j]->str));
+    }
+    // indicator for return is a cell array
+    k = 1;
+    // free hiredis
+    freeReplyObject(reply);
+    redisFree(c);
+    // this will return warnings ... but seems to work fine
+    return cell_array_ptr;
+    
   } else if (reply->type == REDIS_REPLY_INTEGER) {
-
+    // IMPROVE ME! 
+      // currently numbers are convert and returned as a string
     long long int t = reply->integer;
-
+    // save copy
     snprintf(redisChar, 19, "%lld",t);
+    
+    // free redis
     freeReplyObject(reply);
     redisFree(c);
 
@@ -95,15 +119,21 @@ void mexFunction (int nlhs, mxArray *plhs[],
   } else if ( nrhs == 1) {
     // one input (command), use default host and port
     if ( mxIsChar(prhs[0]) ) {
-
+      // default hostname and port
       hostname = "127.0.0.1";
       port = 6379;
+      
+      // get command
       command = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
       mxGetString(prhs[0], command, mxGetN(prhs[0])+1);
-
+      
+      // call our 'callRedis' function
       redisReturn = callRedis(hostname, port, command);
-
-      plhs[0] = mxCreateString(redisReturn);
+      if (0 == k) {
+          plhs[0] = mxCreateString(redisReturn);
+      } else if ( 1 == k) {
+          plhs[0] = redisReturn;
+      }
 
     } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command Input must be a string.");
@@ -125,7 +155,11 @@ void mexFunction (int nlhs, mxArray *plhs[],
 
       redisReturn = callRedis(hostname, port, command);
 
-      plhs[0] = mxCreateString(redisReturn);
+      if (0 == k) {
+          plhs[0] = mxCreateString(redisReturn);
+      } else if ( 1 == k) {
+          plhs[0] = redisReturn;
+      }
 
     } else {
 
@@ -150,7 +184,11 @@ void mexFunction (int nlhs, mxArray *plhs[],
 
       redisReturn = callRedis(hostname, port, command);
 
-      plhs[0] = mxCreateString(redisReturn);
+      if (0 == k) {
+          plhs[0] = mxCreateString(redisReturn);
+      } else if ( 1 == k) {
+          plhs[0] = redisReturn;
+      }
 
     } else {
 
