@@ -41,24 +41,41 @@ https://savannah.gnu.org/bugs/?41723
 
 # limitations & todo
 
-* authentication is not supported yet
 * write a Makefile and maybe add `hiredis` as a submodule to simplify the setup process
+* improve c-code
 
 
 
 # usage
 
+#### initialize redis class
+
+	>> help redis
+	 redis mex client for Matlab and GNU Octave
+  	r = redis()
+  	r = redis(hostname) 
+  	r = redis(hostname, port)
+  	r = redis(hostname, port, db)
+  	r = redis(hostname, port, db, pwd)
+
+`hostname` is type char  
+`port` is type double  
+`db` is type double _(database number)_  
+`pwd` is type char _(auth password)_  
+
 
 ##### make a connection
 
-        r = redis()
-        r =
-
-          redis with properties:
-
-            hostname: '127.0.0.1'
-                port: 6379
-
+    >> r = redis()
+		
+	r = 
+		
+  	redis with properties:
+	
+    hostname: '127.0.0.1'
+        port: 6379
+          db: 0
+         pwd: ''
 ##### ping the redis server
 
         ret = r.ping
@@ -116,5 +133,6 @@ for debugging and functions which are not directly supported by go-redis.
 
 For the older go-redis version - pure written in Octave using
 [instrumen-control](http://octave.sourceforge.net/instrument-control/index.html) package - do `git checkout fcf757b`
+
 
 
