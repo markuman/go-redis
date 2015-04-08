@@ -24,7 +24,7 @@
 
 // declarate some stuff
 char* redisReturn;
-char *hostname, *command;
+char *hostname, *command, *password;
 int port;
 char redisChar[19]; // afaik long enough for long long int
 mxArray *cell_array_ptr;
@@ -32,7 +32,7 @@ int k = 0, database = 0, access = 0, changedb = 0;
 
 
 // call Redis function
-char* callRedis(const char *hostname, int port, char *command, int database){
+char* callRedis(const char *hostname, int port, char *command, int database, char *password){
 
   //char *redisChar;
 
@@ -56,8 +56,15 @@ char* callRedis(const char *hostname, int port, char *command, int database){
   }
 
   // 1) optional auth
-  
-  
+  if (access == 1 && strlen(password) > 0){
+      reply= redisCommand(c, "AUTH %s", password);
+      if (reply->type == REDIS_REPLY_ERROR) {
+          /* Authentication failed */
+          //!Improve me!
+          mexErrMsgIdAndTxt("MATLAB:redis_:AuthenticationFailed", "Authentication failed.");
+      }
+  }
+
   // 2) optional change database
   // !Improve me in case of error
   if (changedb == 1 && database != 0) {
@@ -175,7 +182,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
   }
   
   if ( nrhs == 4 ) {
-      // four inputs (0. host, 1. port, 2. command, 3. database number)
+      // four inputs (0. host, 1. port, 2. database number, 3. command,)
       if ( mxIsChar(prhs[0])  &&  mxIsDouble(prhs[1]) && mxIsDouble(prhs[2]) && mxIsChar(prhs[3]) ) {
           
           hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
@@ -197,8 +204,35 @@ void mexFunction (int nlhs, mxArray *plhs[],
       }
   }
   
+  if ( nrhs == 5 ) {
+      // five inputs (0. host, 1. port, 2. database number, 3. password, 4. command )
+      if ( mxIsChar(prhs[0])  &&  mxIsDouble(prhs[1]) && mxIsDouble(prhs[2]) && mxIsChar(prhs[3]) && mxIsChar(prhs[4]) ) {
+          
+          hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
+          mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
+          
+          // convert double to integer :: PORT
+          double* data = mxGetPr(prhs[1]);
+          port = (int)floor(data[0]);
+          
+          // convert double to integer :: DATABASE NUMBER
+          double* databasedata = mxGetPr(prhs[2]);
+          database = (int)floor(databasedata[0]);
+          changedb = 1;
+          
+          password = (char *) mxCalloc(mxGetN(prhs[3])+1, sizeof(char));
+          mxGetString(prhs[3], password, mxGetN(prhs[3])+1);
+          access = 1;
+          
+          command = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
+          mxGetString(prhs[4], command, mxGetN(prhs[4])+1);
+      } else {
+      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string and Port and database must be double.");
+      }
+  }
+  
   // call our 'callRedis' function
-  redisReturn = callRedis(hostname, port, command, database);
+  redisReturn = callRedis(hostname, port, command, database, password);
   if (0 == k) {
       plhs[0] = mxCreateString(redisReturn);
   } else if ( 1 == k) {
