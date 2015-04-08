@@ -25,10 +25,9 @@
 // declarate some stuff
 char* redisReturn;
 char *hostname, *command, *password;
-int port;
+int port, k, database, auth, changedb;
 char redisChar[19]; // afaik long enough for long long int
 mxArray *cell_array_ptr;
-int k = 0, database = 0, auth = 0, changedb = 0;
 
 
 // call Redis function
@@ -109,7 +108,6 @@ char* callRedis(const char *hostname, int port, char *command, int database, cha
     return redisChar;
 
   } else {
-
     return reply->str;
   }
 
@@ -122,7 +120,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
                   int nrhs, const mxArray *prhs[])
 {
 
-    
+  k = 0;
   // --- input checks
   // currently we need at least more than one input and one ouput!!
   // improve me!!
@@ -134,9 +132,9 @@ void mexFunction (int nlhs, mxArray *plhs[],
   // default stuff
   hostname  = "127.0.0.1";
   port      = 6379;  
-// default per global declaration
-//  database  = 0;  
-//  auth    = 0;
+  database  = 0;
+  auth      = 0;
+  k         = 0;
   
   if ( nrhs == 1) {
     // one input (command), use default host and port
