@@ -76,6 +76,7 @@ https://savannah.gnu.org/bugs/?41723
         port: 6379
           db: 0
          pwd: ''
+
 ##### ping the redis server
 
         ret = r.ping
@@ -95,7 +96,8 @@ value can be a double or a char. doubles will be converted to char.
         OK
 
 ##### INCR & DECR
-`r.incr(key)`
+`r.incr(key)`  
+return type will be double.
 
         ret = r.incr('go-redis')
 
@@ -103,7 +105,7 @@ value can be a double or a char. doubles will be converted to char.
 
 ##### GET
 `r.get(key)`
-return type will always be a char!
+return type will be a char!
 
         ret = r.get('go-redis')
 

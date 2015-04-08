@@ -25,102 +25,15 @@
 // declarate some stuff
 char* redisReturn;
 char *hostname, *command, *password;
-int port, k, database, auth, changedb;
+int port, database;
 char redisChar[19]; // afaik long enough for long long int
 mxArray *cell_array_ptr;
-
-
-// call Redis function
-char* callRedis(const char *hostname, int port, char *command, int database, char *password){
-  //char *redisChar;
-
-  // hiredis declaration
-  redisContext *c;
-  redisReply *reply;
-
-  // time out and make redis connection
-  struct timeval timeout = { 1, 500000 }; // 1.5 seconds
-  c = redisConnectWithTimeout(hostname, port, timeout);
-
-  // error when connection failed
-  if (c == NULL || c->err) {
-    if (c) {
-      mexErrMsgIdAndTxt("MATLAB:redis_:connectionError","Connection error: %s\n", c->errstr);
-      redisFree(c);
-    } else {
-      mexErrMsgIdAndTxt("MATLAB:redis_:connectionError", "Connection error: can't allocate redis context.");
-    }
-    //exit(1);
-  }
-
-  // 1) optional auth
-  if (auth == 1 && strlen(password) > 0){
-      reply= redisCommand(c, "AUTH %s", password);
-      if (reply->type == REDIS_REPLY_ERROR) {
-          /* Authentication failed */
-          //!Improve me!
-          mexErrMsgIdAndTxt("MATLAB:redis_:AuthenticationFailed", "Authentication failed.");
-      }
-  }
-
-  // 2) optional change database
-  // !Improve me in case of error
-  if (changedb == 1 && database != 0) {
-      reply = redisCommand(c, "SELECT %d", database);
-  }
-  
-  // call redis
-  reply = redisCommand(c, command);
-
-  // check the output
-  if (reply->type == REDIS_REPLY_STRING) {
-    return reply->str;
-    
-  } else if (reply->type == REDIS_REPLY_ARRAY) {
-    // get number of elements
-    int n = (int)floor(reply->elements);
-    // outout will be a cell array matlab-sided
-    cell_array_ptr = mxCreateCellMatrix(n,1);
-
-    for (unsigned int j = 0; j < reply->elements; j++) {
-        //mexPrintf("%u) %s\n", j, reply->element[j]->str);
-        mxSetCell(cell_array_ptr,j, mxCreateString(reply->element[j]->str));
-    }
-    // indicator for return is a cell array
-    k = 1;
-    // free hiredis
-    freeReplyObject(reply);
-    redisFree(c);
-    // this will return warnings ... but seems to work fine
-    return cell_array_ptr;
-    
-  } else if (reply->type == REDIS_REPLY_INTEGER) {
-    // IMPROVE ME! 
-      // currently numbers are convert and returned as a string
-    long long int t = reply->integer;
-    // save copy
-    snprintf(redisChar, 19, "%lld",t);
-    
-    // free redis
-    freeReplyObject(reply);
-    redisFree(c);
-
-    return redisChar;
-
-  } else {
-    return reply->str;
-  }
-
-
-}
 
 
 // matlab/octave mex function
 void mexFunction (int nlhs, mxArray *plhs[],
                   int nrhs, const mxArray *prhs[])
 {
-
-  k = 0;
   // --- input checks
   // currently we need at least more than one input and one ouput!!
   // improve me!!
@@ -133,8 +46,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
   hostname  = "127.0.0.1";
   port      = 6379;  
   database  = 0;
-  auth      = 0;
-  k         = 0;
+  password  = "";
   
   if ( nrhs == 1) {
     // one input (command), use default host and port
@@ -194,7 +106,6 @@ void mexFunction (int nlhs, mxArray *plhs[],
           // convert double to integer :: DATABASE NUMBER
           double* databasedata = mxGetPr(prhs[2]);
           database = (int)floor(databasedata[0]);
-          changedb = 1;
           
           command = (char *) mxCalloc(mxGetN(prhs[3])+1, sizeof(char));
           mxGetString(prhs[3], command, mxGetN(prhs[3])+1);
@@ -217,11 +128,9 @@ void mexFunction (int nlhs, mxArray *plhs[],
           // convert double to integer :: DATABASE NUMBER
           double* databasedata = mxGetPr(prhs[2]);
           database = (int)floor(databasedata[0]);
-          changedb = 1;
           
           password = (char *) mxCalloc(mxGetN(prhs[3])+1, sizeof(char));
           mxGetString(prhs[3], password, mxGetN(prhs[3])+1);
-          auth = 1;
           
           command = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
           mxGetString(prhs[4], command, mxGetN(prhs[4])+1);
@@ -230,13 +139,90 @@ void mexFunction (int nlhs, mxArray *plhs[],
       }
   }
   
-  // call our 'callRedis' function
-  redisReturn = callRedis(hostname, port, command, database, password);
-  if (0 == k) {
-      plhs[0] = mxCreateString(redisReturn);
-  } else if ( 1 == k) {
-      plhs[0] = redisReturn;
+  // hiredis declaration
+  redisContext *c;
+  redisReply *reply;
+
+  // time out and make redis connection
+  struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+  c = redisConnectWithTimeout(hostname, port, timeout);
+
+  // error when connection failed
+  if (c == NULL || c->err) {
+    if (c) {
+      mexErrMsgIdAndTxt("MATLAB:redis_:connectionError","Connection error: %s\n", c->errstr);
+      redisFree(c);
+    } else {
+      mexErrMsgIdAndTxt("MATLAB:redis_:connectionError", "Connection error: can't allocate redis context.");
+    }
   }
+
+  // 1) optional auth
+  if (strlen(password) > 0){
+      reply= redisCommand(c, "AUTH %s", password);
+      if (reply->type == REDIS_REPLY_ERROR) {
+          /* Authentication failed */
+          mexErrMsgIdAndTxt("MATLAB:redis_:AuthenticationFailed", "Authentication failed.");
+      }
+  }
+
+  // 2) optional change database
+  // !Improve me in case of error
+  if (database != 0) {
+      reply = redisCommand(c, "SELECT %d", database);
+      if (reply->type == REDIS_REPLY_ERROR) {
+          /* Select database failed */
+          mexErrMsgIdAndTxt("MATLAB:redis_:SelectFailed", "Select Database %d failed.", database);
+      }
+  }
+  
+  // call redis
+  reply = redisCommand(c, command);
+
+  // check the output
+  if (reply->type == REDIS_REPLY_STRING) {
+      plhs[0] = mxCreateString(reply->str);
+  } else if (reply->type == REDIS_REPLY_ARRAY) {
+    // get number of elements
+    int n = (int)floor(reply->elements);
+    // outout will be a cell array matlab-sided
+    cell_array_ptr = mxCreateCellMatrix(n,1);
+
+    for (unsigned int j = 0; j < reply->elements; j++) {
+        //mexPrintf("%u) %s\n", j, reply->element[j]->str);
+        mxSetCell(cell_array_ptr,j, mxCreateString(reply->element[j]->str));
+    }
+
+    // free hiredis
+    freeReplyObject(reply);
+    redisFree(c);
+    // this will return warnings ... but seems to work fine
+    plhs[0] = cell_array_ptr;
+    
+  } else if (reply->type == REDIS_REPLY_INTEGER) {
+    // IMPROVE ME! 
+    // currently numbers are convert and returned as a string
+    long long int t = reply->integer;
+    // save copy
+    //snprintf(redisChar, 19, "%lld",t);
+    //plhs[0] = mxCreateString(redisChar);
+
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+    double *out;
+    out = mxGetPr(plhs[0]);
+    out[0] = t;
+        
+    // free redis
+    freeReplyObject(reply);
+    redisFree(c);
+
+    
+
+  } else {
+    // Laugh in the face of danger
+    plhs[0] = mxCreateString(reply->str);
+  }
+
 }
 
 
