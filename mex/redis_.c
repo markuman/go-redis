@@ -28,7 +28,7 @@ char *hostname, *command, *password;
 int port;
 char redisChar[19]; // afaik long enough for long long int
 mxArray *cell_array_ptr;
-int k = 0, database = 0, access = 0, changedb = 0;
+int k = 0, database = 0, auth = 0, changedb = 0;
 
 
 // call Redis function
@@ -55,7 +55,7 @@ char* callRedis(const char *hostname, int port, char *command, int database, cha
   }
 
   // 1) optional auth
-  if (access == 1 && strlen(password) > 0){
+  if (auth == 1 && strlen(password) > 0){
       reply= redisCommand(c, "AUTH %s", password);
       if (reply->type == REDIS_REPLY_ERROR) {
           /* Authentication failed */
@@ -136,7 +136,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
   port      = 6379;  
 // default per global declaration
 //  database  = 0;  
-//  access    = 0;
+//  auth    = 0;
   
   if ( nrhs == 1) {
     // one input (command), use default host and port
@@ -223,7 +223,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
           
           password = (char *) mxCalloc(mxGetN(prhs[3])+1, sizeof(char));
           mxGetString(prhs[3], password, mxGetN(prhs[3])+1);
-          access = 1;
+          auth = 1;
           
           command = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
           mxGetString(prhs[4], command, mxGetN(prhs[4])+1);
