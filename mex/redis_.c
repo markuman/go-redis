@@ -33,7 +33,6 @@ int k = 0, database = 0, access = 0, changedb = 0;
 
 // call Redis function
 char* callRedis(const char *hostname, int port, char *command, int database, char *password){
-
   //char *redisChar;
 
   // hiredis declaration
@@ -123,6 +122,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
                   int nrhs, const mxArray *prhs[])
 {
 
+    
   // --- input checks
   // currently we need at least more than one input and one ouput!!
   // improve me!!
@@ -133,9 +133,10 @@ void mexFunction (int nlhs, mxArray *plhs[],
   
   // default stuff
   hostname  = "127.0.0.1";
-  port      = 6379;
-  database  = 0;
-  access    = 0;
+  port      = 6379;  
+// default per global declaration
+//  database  = 0;  
+//  access    = 0;
   
   if ( nrhs == 1) {
     // one input (command), use default host and port
