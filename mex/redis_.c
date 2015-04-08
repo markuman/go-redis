@@ -5,7 +5,7 @@
  * mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -std=c99 -O4 -pedantic -g' redis_.c
  *
  * GNU OCTAVE
- * gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared redis_.c -o redis_.mex
+ * mkoctfile -Wall -Wextra -v -I/usr/include/hiredis --mex redis_.c -lhiredis -std=c99
  */
 
 // C specific includes
@@ -167,7 +167,6 @@ void mexFunction (int nlhs, mxArray *plhs[],
   }
 
   // 2) optional change database
-  // !Improve me in case of error
   if (database != 0) {
       reply = redisCommand(c, "SELECT %d", database);
       if (reply->type == REDIS_REPLY_ERROR) {
@@ -196,12 +195,9 @@ void mexFunction (int nlhs, mxArray *plhs[],
     // free hiredis
     freeReplyObject(reply);
     redisFree(c);
-    // this will return warnings ... but seems to work fine
     plhs[0] = cell_array_ptr;
     
   } else if (reply->type == REDIS_REPLY_INTEGER) {
-    // IMPROVE ME! 
-    // currently numbers are convert and returned as a string
     long long int t = reply->integer;
     // save copy
     //snprintf(redisChar, 19, "%lld",t);
