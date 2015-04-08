@@ -29,14 +29,20 @@ Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
 ### GNU Octave
 
-Best way is to compile it from bash
+From GNU Octave commandline
 
-    gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
+    mkoctfile -Wall -Wextra -v -I/usr/include/hiredis --mex redis_.c -lhiredis -std=c99
 
 Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
 **Currently (3/19/2015) there is a bug in classdef. You have to do `addpath private` in octave as a workaround!**
 https://savannah.gnu.org/bugs/?41723
+
+### Bash
+
+You can compile it in bash too
+
+    gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
 
 
 # limitations & todo
