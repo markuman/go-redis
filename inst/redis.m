@@ -17,13 +17,11 @@ classdef redis
 
         %% classdef input validation
         function obj = redis(varargin)
-
-            if nargin == 0
-                obj.port        = 6379;
-                obj.hostname    = '127.0.0.1';
-                obj.db          = 0;
-                obj.pwd         = '';
-            end
+            
+            obj.port        = 6379;
+            obj.hostname    = '127.0.0.1';
+            obj.db          = 0;
+            obj.pwd         = '';
             if nargin >= 1
                 obj.hostname    = varargin{1};
             end
