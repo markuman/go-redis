@@ -52,13 +52,13 @@ classdef redis
 
         function ret = incr(r, key)
 
-            ret = sscanf(redis_(r.hostname, r.port, r.db, r.pwd, sprintf('INCR %s', key)), '%d');
+            ret = redis_(r.hostname, r.port, r.db, r.pwd, sprintf('INCR %s', key));
 
         end%incr
 
         function ret = decr(r, key)
 
-            ret = sscanf(redis_(r.hostname, r.port, r.db, r.pwd, sprintf('DECR %s', key)), '%d');
+            ret = redis_(r.hostname, r.port, r.db, r.pwd, sprintf('DECR %s', key));
 
         end%decr
 
