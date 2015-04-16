@@ -56,7 +56,8 @@ You can compile it in bash too
 # limitations
 
 * GNU Octave and Matlab
-  * Whitespaces in values are not supported yed
+  * Whitespaces in values are not supported yet
+  * `sscan`/nested cells as return are not supported yet
 
 * GNU Octave
   * there is a bug in classdef. You have to do `addpath private` in octave as a workaround! https://savannah.gnu.org/bugs/?41723
