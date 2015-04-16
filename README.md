@@ -45,10 +45,18 @@ You can compile it in bash too
     gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
 
 
-# limitations & todo
+# todo
 
 * write a Makefile and maybe add `hiredis` as a submodule to simplify the setup process
 * improve c-code
+* more documentation
+* more unittests
+
+# limitations
+
+* Octave
+  * there is a bug in classdef. You have to do `addpath private` in octave as a workaround! https://savannah.gnu.org/bugs/?41723
+  * `inputname` is currently not supported in a classdef environment. So you have to name you array by yourself when using `array2redis`.
 
 
 
