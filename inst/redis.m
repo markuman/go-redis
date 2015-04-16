@@ -11,6 +11,7 @@ classdef redis
         port
         db
         passwd
+        precision
     end%properties
 
     methods
@@ -22,6 +23,7 @@ classdef redis
             obj.hostname    = '127.0.0.1';
             obj.db          = 0;
             obj.passwd      = '';
+            obj.precision   = 4;
             if nargin >= 1
                 obj.hostname    = varargin{1};
             end
@@ -75,6 +77,61 @@ classdef redis
             ret = redis_(r.hostname, r.port, r.db, r.passwd, command);
 
         end%call
+        
+        %% Matlab/Octave special
+        % save array in redis
+        function ret = array2redis(r, array, name)
+            
+            if (exist('OCTAVE_VERSION', 'builtin') == 5) && (nargin == 2)
+               error('Currently you have to name you array using array2redis in Octave')
+            end%if
+            
+            if (nargin == 3)
+                if ~ischar(name)
+                    error('input 3 has to be a char')
+                else
+                    varname = name;
+                end%if ~ischar
+            else
+                % get origin variablename of array
+                % shit shit shit                
+                varname = inputname(2);                
+            end%if nargin
+            
+            if isnumeric(array)
+                
+                % save array in a list
+                ret1 = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('RPUSH %s.values %s', varname, num2str(array(:)', r.precision)));
+                % save dimension in a key
+                ret2 = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('RPUSH %s.dimension %s', varname, num2str(size(array), r.precision)));
+                % group values and dimension
+                ret3 = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SADD %s %s.values %s.dimension', varname, varname, varname));
+                
+                if (isnumeric(ret1) && isnumeric(ret2) && isnumeric(ret3))
+                    ret = true();
+                else
+                    ret = false();
+                end
+                
+            else
+                error('Input Array have to be numeric')
+            end
+            
+        end%function array2redis
+        
+        function ret = redis2array(r, key)
+            
+            valueVar        = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('EXISTS %s.values', key));
+            dimensionVar    = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('EXISTS %s.dimension', key));
+            if (1 == valueVar) && (1 == dimensionVar)
+                ret         = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('LRANGE %s.values 0 -1', key));
+                dimension   = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('LRANGE %s.dimension 0 -1', key));
+                ret = reshape(str2double(ret),str2double(dimension)');
+            else
+                ret = false();
+            end%if
+            
+        end%function redis2array
 
     end%methods
 
