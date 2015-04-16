@@ -51,10 +51,14 @@ You can compile it in bash too
 * improve c-code
 * more documentation
 * more unittests
+* add exist check when using `array2redis`
 
 # limitations
 
-* Octave
+* GNU Octave and Matlab
+  * Whitespaces in values are not supported yed
+
+* GNU Octave
   * there is a bug in classdef. You have to do `addpath private` in octave as a workaround! https://savannah.gnu.org/bugs/?41723
   * `inputname` is currently not supported in a classdef environment. So you have to name you array by yourself when using `array2redis`.
 
