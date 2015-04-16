@@ -42,7 +42,7 @@ classdef redis
         %% redis functions
         function ret = set(r, key, value)
 
-            ret = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SET %s %s', key, num2str(value)));
+            ret = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SET %s %s', key, num2str(value, r.precision)));
 
         end%set
 
