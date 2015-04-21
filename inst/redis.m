@@ -132,6 +132,25 @@ classdef redis
             end%if
             
         end%function redis2array
+        
+        function ret = gaussian(r, a, b)
+            % currently sum of gaussian.lua
+            % 15d33d14f48708a38a828adbfb1f464798ad8e59 in redis
+            retVar = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('EVALSHA 15d33d14f48708a38a828adbfb1f464798ad8e59 2 %s %s', a, b));
+            ret = r.redis2array(retVar);
+        end
+       
+% whitspaces fuckup!
+%         function ret = loadGaussian(r)
+%             fid = fopen('private/gaussian.lua','r');
+%             if fid >= 3
+%                 luastring = fread (fid, 'char=>char').';
+%                 ret = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SCRIPT LOAD %s', luastring));
+%                 fclose(fid);                
+%             else
+%                 error('failed to load file private/gaussian.lua')
+%             end%if
+%         end%function
 
     end%methods
 
