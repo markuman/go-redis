@@ -12,6 +12,7 @@ classdef redis
         db
         passwd
         precision
+        silentOverwrite
     end%properties
 
     methods
@@ -19,11 +20,12 @@ classdef redis
         %% classdef input validation
         function obj = redis(varargin)
             
-            obj.port        = 6379;
-            obj.hostname    = '127.0.0.1';
-            obj.db          = 0;
-            obj.passwd      = '';
-            obj.precision   = 4;
+            obj.port            = 6379;
+            obj.hostname        = '127.0.0.1';
+            obj.db              = 0;
+            obj.passwd          = '';
+            obj.precision       = 4;
+            obj.silentOverwrite = false;
             if nargin >= 1
                 obj.hostname    = varargin{1};
             end
@@ -42,33 +44,92 @@ classdef redis
         %% redis functions
         function ret = set(r, key, value)
 
-            ret = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SET %s %s', key, num2str(value, r.precision)));
+            if ischar(key) && (0 == any(isspace(key)))
+                if r.exists(key) && (0 == r.silentOverwrite)
+                    error('KEY %s exists already', key);
+                end
 
+                if iscell(value)
+                    error('cell is not supported for set. Serilalize yourself')
+
+                elseif isnumeric(value)
+                    % delete %s.serialstring without checking, because it isn't
+                    % a serialstring anymore
+                    r.del([key '.serialstring']);
+                    ret = r.call(sprintf('SET %s %s', key, num2str(value, r.precision))); 
+
+                elseif ischar(value) && any(isspace(value))
+                    % yeah, serialize it quick & dirty!
+                    value = sprintf('%d,',uint32(value));
+                    redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SET %s.serialstring 1', key));
+                    ret = r.call(sprintf('SET %s %s', key, value));   
+
+                end%if check classtype
+            else
+                error('Input "key" must be a whitespace-free string')
+            end
+            
         end%set
 
         function ret = get(r, key)
-
-            ret = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('GET %s', key));
+            
+            if ischar(key) && (0 == any(isspace(key)))
+                ret = r.call(sprintf('GET %s', key));
+                if r.exists([key '.serialstring'])
+                    ret = char(sscanf(ret, '%d,')');
+                end
+            else
+                error('keyname must be a whitespace-free string')
+            end
 
         end%get
 
         function ret = incr(r, key)
 
-            ret = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('INCR %s', key));
+            ret = r.call(['INCR ' key]);
 
         end%incr
 
         function ret = decr(r, key)
 
-            ret = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('DECR %s', key));
+            ret = r.call(['DECR ' key]);
 
         end%decr
 
         function ret = ping(r)
 
-            ret = redis_(r.hostname, r.port, r.db, r.passwd, 'PING');
+            ret = r.call('PING');
 
         end%ping
+        
+        function ret = del(r, varargin)
+            
+            %let's hope every input is a whitespace-free char
+            vars = sprintf('%s ', varargin{:});
+            ret = r.call(['DEL ' vars]);
+            
+        end%del
+        
+        function ret = exists(r, keyname)
+            
+            if ischar(keyname) && (0 == any(isspace(keyname)))
+                ret = r.call(['EXISTS ' keyname]);
+            else
+                error('Input must be a whitespace-free string')
+            end
+            
+        end%exists
+        
+        function ret = type(r, keyname)
+            
+            if ischar(keyname) && (0 == any(isspace(keyname)))
+                ret = r.call(['TYPE ' keyname]);
+            else
+                error('Input must be a whitespace-free string')
+            end
+            
+        end%type
+            
 
         %% redis call command
         % for debugging and not directly supported redis functions
@@ -87,25 +148,30 @@ classdef redis
             end%if
             
             if (nargin == 3)
-                if ~ischar(name)
-                    error('input 3 has to be a char')
-                else
+                if ischar(name) && (0 == any(isspace(name)))
                     varname = name;
+                else
+                    error('input 3 has to be a char')
                 end%if ~ischar
             else
                 % get origin variablename of array
-                % shit shit shit                
                 varname = inputname(2);                
             end%if nargin
             
             if isnumeric(array)
                 
+                if (1 == r.exists(varname)) && (0 == r.silentOverwrite)
+                    error('KEY %s exists already', varname);
+                else
+                    r.del(varname, [varname '.values'], [varname '.dimension']);
+                end
+                
                 % save array in a list
-                ret1 = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('RPUSH %s.values %s', varname, num2str(array(:)', r.precision)));
+                ret1 = r.call(sprintf('RPUSH %s.values %s', varname, num2str(array(:)', r.precision)));
                 % save dimension in a key
-                ret2 = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('RPUSH %s.dimension %s', varname, num2str(size(array), r.precision)));
+                ret2 = r.call(sprintf('RPUSH %s.dimension %s', varname, num2str(size(array), r.precision)));
                 % group values and dimension
-                ret3 = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SADD %s %s.values %s.dimension', varname, varname, varname));
+                ret3 = r.call(sprintf('SADD %s %s.values %s.dimension', varname, varname, varname));
                 
                 if (isnumeric(ret1) && isnumeric(ret2) && isnumeric(ret3))
                     ret = true();
@@ -119,24 +185,30 @@ classdef redis
             
         end%function array2redis
         
-        function ret = redis2array(r, key)
+        function ret = redis2array(r, keyname)
             
-            valueVar        = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('EXISTS %s.values', key));
-            dimensionVar    = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('EXISTS %s.dimension', key));
-            if (1 == valueVar) && (1 == dimensionVar)
-                ret         = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('LRANGE %s.values 0 -1', key));
-                dimension   = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('LRANGE %s.dimension 0 -1', key));
-                ret = reshape(str2double(ret),str2double(dimension)');
+            if ischar(keyname) && (0 == any(isspace(keyname)))
+                valueVar        = r.exists([keyname '.values']);
+                dimensionVar    = r.exists([keyname '.dimension']);
+                if valueVar && dimensionVar
+                    ret         = r.call(sprintf('LRANGE %s.values 0 -1', keyname));
+                    dimension   = r.call(sprintf('LRANGE %s.dimension 0 -1', keyname));
+                    ret = reshape(str2double(ret),str2double(dimension)');
+                else
+                    ret = false();
+                end%if
             else
-                ret = false();
-            end%if
+                error('Input must be the keyname (whitespace-free) of an array')
+            end%if char
             
         end%function redis2array
         
+        %% HIGH EXPERIMENTAL
+        % https://github.com/markuman/go-redis/wiki/Gaussian-elimination
         function ret = gaussian(r, a, b)
             % currently sum of gaussian.lua
             % 15d33d14f48708a38a828adbfb1f464798ad8e59 in redis
-            retVar = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('EVALSHA 15d33d14f48708a38a828adbfb1f464798ad8e59 2 %s %s', a, b));
+            retVar = r.call(sprintf('EVALSHA 15d33d14f48708a38a828adbfb1f464798ad8e59 2 %s %s', a, b));
             ret = r.redis2array(retVar);
         end
        
