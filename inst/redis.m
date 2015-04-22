@@ -61,7 +61,7 @@ classdef redis
                 elseif ischar(value) && any(isspace(value))
                     % yeah, serialize it quick & dirty!
                     if (exist('OCTAVE_VERSION', 'builtin') == 5)
-                        value = sprintf('%d,',uint32(value));
+                        value = sprintf('%d,',uint8(value));
                     else
                         value = sprintf('%d,', unicode2native(char(uint8(value))));
                     end
