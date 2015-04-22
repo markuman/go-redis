@@ -60,7 +60,11 @@ classdef redis
 
                 elseif ischar(value) && any(isspace(value))
                     % yeah, serialize it quick & dirty!
-                    value = sprintf('%d,',uint32(value));
+                    if (exist('OCTAVE_VERSION', 'builtin') == 5)
+                        value = sprintf('%d,',uint32(value));
+                    else
+                        value = sprintf('%d,', unicode2native(char(uint8(value))));
+                    end
                     redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SET %s.serialstring 1', key));
                     ret = r.call(sprintf('SET %s %s', key, value));   
 
@@ -76,7 +80,11 @@ classdef redis
             if ischar(key) && (0 == any(isspace(key)))
                 ret = r.call(sprintf('GET %s', key));
                 if r.exists([key '.serialstring'])
-                    ret = char(sscanf(ret, '%d,')');
+                    if (exist('OCTAVE_VERSION', 'builtin') == 5)
+                        ret = char(sscanf(ret, '%d,')');
+                    else
+                        ret = native2unicode(sscanf(ret, '%d,')');
+                    end
                 end
             else
                 error('keyname must be a whitespace-free string')
