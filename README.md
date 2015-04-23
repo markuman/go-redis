@@ -6,6 +6,12 @@ go-redis - **G**NU **O**ctave **redis** client
 
 Tested with Linux and Mac OS X.
 
+For more detailed information next to this `README.md`, take a look at the Wiki
+
+* [Data-Structure](https://github.com/markuman/go-redis/wiki/Data-Structure)
+* [Collaborative Workspace](https://github.com/markuman/go-redis/wiki/Collaborative-Workspace)
+* [Gaussian Elimination](https://github.com/markuman/go-redis/wiki/Gaussian-elimination)
+
 
 # Requirements
 
@@ -49,14 +55,12 @@ You can compile it in bash too
 
 * write a Makefile and maybe add `hiredis` as a submodule to simplify the setup process
 * improve c-code
-* more documentation
+* still some problems with unicodes...
 * more unittests
-* add exist check when using `array2redis`
 
 # limitations
 
 * GNU Octave and Matlab
-  * Whitespaces in values are not supported yet
   * `sscan`/nested cells as return are not supported yet
 
 * GNU Octave
@@ -65,38 +69,54 @@ You can compile it in bash too
 
 
 
-# usage
+## basics
 
-#### initialize redis class
+### initialize redis class
 
 	>> help redis
 	 redis mex client for Matlab and GNU Octave
   	r = redis()
-  	r = redis(hostname) 
+  	r = redis(hostname)
   	r = redis(hostname, port)
   	r = redis(hostname, port, db)
   	r = redis(hostname, port, db, pwd)
 
-`hostname` is type char  
-`port` is type double  
-`db` is type double _(database number)_  
-`pwd` is type char _(auth password)_  
+### properties
+
+ * `hostname`
+   * type char
+ * `port`
+   * type double
+ * `db`
+   * type double
+   * database number to use
+ * `pwd`
+   * type char
+   * auth password
+ * `precision`
+   * type double
+   * number of decimal points
+ * `silentOverwrite
+   * type boolean
+   * default `false` - will never overwrite existing keys
 
 
-##### make a connection
+## usage
+
+### make a connection
 
     >> r = redis()
-		
-	r = 
-		
-  	redis with properties:
-	
-    hostname: '127.0.0.1'
-        port: 6379
-          db: 0
-         pwd: ''
 
-##### ping the redis server
+	r =
+
+           hostname: '127.0.0.1'
+               port: 6379
+                 db: 0
+             passwd: ''
+          precision: 4
+    silentOverwrite: 0
+
+### ping the redis server
 
         ret = r.ping
 
@@ -104,9 +124,12 @@ You can compile it in bash too
 
         PONG
 
-##### SET
+### SET
 `r.set(key, value)`
-value can be a double or a char. doubles will be converted to char.
+
+ * value can be a double or a char
+ * doubles will be converted to char
+ * if value is a char with whitespaces, it will be serialized. for more informations, take a look at the wiki
 
         ret = r.set('go-redis', 1)
 
@@ -114,8 +137,8 @@ value can be a double or a char. doubles will be converted to char.
 
         OK
 
-##### INCR & DECR
-`r.incr(key)`  
+### INCR & DECR
+`r.incr(key)`
 return type will be double.
 
         ret = r.incr('go-redis')
@@ -124,7 +147,7 @@ return type will be double.
 
 ##### GET
 `r.get(key)`
-return type will be a char!
+return type will be a char or a double _(depends on the reply of hiredis)_
 
         ret = r.get('go-redis')
 
@@ -132,7 +155,27 @@ return type will be a char!
 
         2
 
-##### array reply
+### DEL
+`r.del(key)`
+return will be true or false
+
+        >> r.del('s')
+
+        ans =
+
+             1
+
+### TYPE
+`r.type(key)`
+return will be a string
+
+        >> r.del('s')
+
+        ans =
+
+             1
+
+### array reply
 An array reply will be transformed into a cell array in Octave/Matlab.
 
         octave:2> r.call('keys *')
@@ -143,10 +186,34 @@ An array reply will be transformed into a cell array in Octave/Matlab.
         }
 
 
-##### CALL
+### CALL
 `r.call(command)`
 for debugging and functions which are not directly supported by go-redis.
 
+
+### GNU OCtave and Matlab special
+
+#### array2redis
+`r.array2redis(array, name)`
+For storing a multidimension numeric array in redis
+
+        >> r.array2redis(rand(3,3), 'm')
+
+        ans =
+
+             1
+
+#### redis2array
+`r.redis2array(name)`
+For reading a multidimension numeric array from redis back into workspace
+
+        >> r.redis2array('m')
+
+        ans =
+
+            0.8147    0.9134    0.2785
+            0.9058    0.6324    0.5469
+            0.1270    0.0975    0.9575
 
 
 
