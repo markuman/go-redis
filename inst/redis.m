@@ -40,6 +40,14 @@ classdef redis
             end
 
         end%obj redis
+        
+        %% redis call command
+        % for debugging and not directly supported redis functions
+        function ret = call(r, command)
+
+            ret = redis_(r.hostname, r.port, r.db, r.passwd, command);
+
+        end%call
 
         %% redis functions
         function ret = set(r, key, value)
@@ -58,14 +66,18 @@ classdef redis
                     r.del([key '.serialstring']);
                     ret = r.call(sprintf('SET %s %s', key, num2str(value, r.precision))); 
 
-                elseif ischar(value) && any(isspace(value))
-                    % yeah, serialize it quick & dirty!
-                    if (exist('OCTAVE_VERSION', 'builtin') == 5)
-                        value = sprintf('%d,',uint8(value));
-                    else
-                        value = sprintf('%d,', unicode2native(char(uint8(value))));
-                    end
-                    redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SET %s.serialstring 1', key));
+                elseif ischar(value) 
+                    r.del([key '.serialstring']);
+                    if any(isspace(value))
+                        % yeah, serialize it quick & dirty!
+                        if (exist('OCTAVE_VERSION', 'builtin') == 5)
+                            value = sprintf('%d,', uint8(value));
+                        else
+                            value = sprintf('%d,', unicode2native(char(uint8(value))));
+                        end                        
+                        r.call = sprintf('SET %s.serialstring 1', key);
+                    end%if isspace
+                    
                     ret = r.call(sprintf('SET %s %s', key, value));   
 
                 end%if check classtype
@@ -137,15 +149,7 @@ classdef redis
             end
             
         end%type
-            
 
-        %% redis call command
-        % for debugging and not directly supported redis functions
-        function ret = call(r, command)
-
-            ret = redis_(r.hostname, r.port, r.db, r.passwd, command);
-
-        end%call
         
         %% Matlab/Octave special
         % save array in redis
