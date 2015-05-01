@@ -67,15 +67,22 @@ classdef redis
                     ret = r.call(sprintf('SET %s %s', key, num2str(value, r.precision))); 
 
                 elseif ischar(value) 
+                    % the uggly part!!
                     r.del([key '.serialstring']);
                     if any(isspace(value))
                         % yeah, serialize it quick & dirty!
                         if (exist('OCTAVE_VERSION', 'builtin') == 5)
                             value = sprintf('%d,', uint8(value));
                         else
-                            value = sprintf('%d,', unicode2native(char(uint8(value))));
+                            value = sprintf('%d,', unicode2native(value));
                         end                        
-                        r.call = sprintf('SET %s.serialstring 1', key);
+                        r.call(sprintf('SET %s.serialstring 1', key));
+                    elseif (exist('OCTAVE_VERSION', 'builtin') ~= 5) 
+                        % matlab encoding is terrible
+                        % it's a must have, otherwise it's not possible to
+                        % save special characters from matlab
+                        value = sprintf('%d,', unicode2native(value));
+                        r.call(sprintf('SET %s.serialstring 1', key));
                     end%if isspace
                     
                     ret = r.call(sprintf('SET %s %s', key, value));   
