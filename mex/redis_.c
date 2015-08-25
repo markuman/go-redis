@@ -24,7 +24,7 @@
 
 // declarate some stuff
 char* redisReturn;
-char *hostname, *command, *password;
+char *hostname, *command, *password, *tmp;
 int port, database;
 char redisChar[19]; // afaik long enough for long long int
 mxArray *cell_array_ptr;
@@ -55,10 +55,25 @@ void mexFunction (int nlhs, mxArray *plhs[],
       // get command
       command = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
       mxGetString(prhs[0], command, mxGetN(prhs[0])+1);
+    } else if ( mxIsCell(prhs[0]) ){
+        mexPrintf("is cell\n");
+        int m = mxGetM(prhs[0]);
+        mxArray *cellArray[m];
+        mexPrintf("%d\n",m);
+        //mxCreateCellMatrix(m, 1);
+        for (int n = 0; n < m; n++){
+            cellArray[n] = mxGetCell(prhs[0], n);
+            tmp = (char *) mxCalloc(mxGetN(cellArray[n])+1, sizeof(char));
+            mxGetString(prhs[nrhs - 1], tmp, mxGetN(cellArray[n])+1);
+            mexPrintf("%s\n", tmp);
+        }
+        
+        mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "debug stop");
     } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command Input must be a string.");
-    }
-  } else if ( nrhs > 1) {
+    
+  }
+    } else if ( nrhs > 1) {
     // GET COMMAND
     if ( mxIsChar(prhs[nrhs - 1]) ) {
       // default hostname and port
@@ -69,6 +84,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command Input must be a string.");
     }   
   }
+
   
   if ( nrhs >= 2  ) {
     // GET HOSTNAME
