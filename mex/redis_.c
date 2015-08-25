@@ -58,82 +58,63 @@ void mexFunction (int nlhs, mxArray *plhs[],
     } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command Input must be a string.");
     }
+  } else if ( nrhs > 1) {
+    // GET COMMAND
+    if ( mxIsChar(prhs[nrhs - 1]) ) {
+      // default hostname and port
+      // get command
+      command = (char *) mxCalloc(mxGetN(prhs[nrhs - 1])+1, sizeof(char));
+      mxGetString(prhs[nrhs - 1], command, mxGetN(prhs[nrhs - 1])+1);
+    } else {
+      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command Input must be a string.");
+    }   
   }
   
-  if ( nrhs == 2  ) {
-    // two inputs (0. host, 1. command) - both strings
-    if ( mxIsChar(prhs[0])  &&  mxIsChar(prhs[1]) ) {
+  if ( nrhs >= 2  ) {
+    // GET HOSTNAME
+    if ( mxIsChar(prhs[0]) ) {
      
       hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
       mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
 
-      command = (char *) mxCalloc(mxGetN(prhs[1])+1, sizeof(char));
-      mxGetString(prhs[1], command, mxGetN(prhs[1])+1);
     } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string.");
     }
   }
   
-  if ( nrhs == 3 ) {
-      // three inputs (0. host, 1. port, 2. command)
-      if ( mxIsChar(prhs[0])  &&  mxIsDouble(prhs[1]) && mxIsChar(prhs[2]) ) {
-          
-          hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
-          mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
-          
+  if ( nrhs >= 3 ) {
+      // GET PORT
+      if ( mxIsDouble(prhs[1]) ) {
+
           // convert double to integer :: PORT
           double* data = mxGetPr(prhs[1]);
           port = (int)floor(data[0]);
           
-          command = (char *) mxCalloc(mxGetN(prhs[2])+1, sizeof(char));
-          mxGetString(prhs[2], command, mxGetN(prhs[2])+1);
       } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string and Port must be double.");
       }
   }
   
-  if ( nrhs == 4 ) {
-      // four inputs (0. host, 1. port, 2. database number, 3. command,)
-      if ( mxIsChar(prhs[0])  &&  mxIsDouble(prhs[1]) && mxIsDouble(prhs[2]) && mxIsChar(prhs[3]) ) {
-          
-          hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
-          mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
-          
-          // convert double to integer :: PORT
-          double* data = mxGetPr(prhs[1]);
-          port = (int)floor(data[0]);
+  if ( nrhs >= 4 ) {
+      // GET DATABASE NR
+      if ( mxIsDouble(prhs[2]) ) {
           
           // convert double to integer :: DATABASE NUMBER
           double* databasedata = mxGetPr(prhs[2]);
           database = (int)floor(databasedata[0]);
           
-          command = (char *) mxCalloc(mxGetN(prhs[3])+1, sizeof(char));
-          mxGetString(prhs[3], command, mxGetN(prhs[3])+1);
       } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string and Port and database must be double.");
       }
   }
   
-  if ( nrhs == 5 ) {
-      // five inputs (0. host, 1. port, 2. database number, 3. password, 4. command )
-      if ( mxIsChar(prhs[0])  &&  mxIsDouble(prhs[1]) && mxIsDouble(prhs[2]) && mxIsChar(prhs[3]) && mxIsChar(prhs[4]) ) {
-          
-          hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
-          mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
-          
-          // convert double to integer :: PORT
-          double* data = mxGetPr(prhs[1]);
-          port = (int)floor(data[0]);
-          
-          // convert double to integer :: DATABASE NUMBER
-          double* databasedata = mxGetPr(prhs[2]);
-          database = (int)floor(databasedata[0]);
-          
+  if ( nrhs >= 5 ) {
+      // GET PASSWQRD
+      if ( mxIsChar(prhs[3]) ) {
+    
           password = (char *) mxCalloc(mxGetN(prhs[3])+1, sizeof(char));
           mxGetString(prhs[3], password, mxGetN(prhs[3])+1);
           
-          command = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
-          mxGetString(prhs[4], command, mxGetN(prhs[4])+1);
       } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string and Port and database must be double.");
       }
