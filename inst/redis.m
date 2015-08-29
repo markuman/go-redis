@@ -13,47 +13,53 @@ classdef redis
         passwd
         precision
         silentOverwrite
+        batchsize
     end%properties
+    
+    properties (Access = protected)
+       swap
+    end
 
     methods
 
         %% classdef input validation
-        function obj = redis(varargin)
-            
-            obj.port            = 6379;
-            obj.hostname        = '127.0.0.1';
-            obj.db              = 0;
-            obj.passwd          = '';
-            obj.precision       = 4;
-            obj.silentOverwrite = false;
+        function self = redis(varargin)            
+            self.port            = 6379;
+            self.hostname        = '127.0.0.1';
+            self.db              = 0;
+            self.passwd          = '';
+            self.precision       = 4;
+            self.silentOverwrite = false;
+            self.batchsize       = 64;
+            self.swap            = cell(self.batchsize,1);
             if nargin >= 1
-                obj.hostname    = varargin{1};
+                self.hostname    = varargin{1};
             end
             if nargin >= 2
-                obj.port        = varargin{2};
+                self.port        = varargin{2};
             end
             if nargin >= 3
-                obj.db          = varargin{3};
+                self.db          = varargin{3};
             end
             if nargin >=4
-                obj.passwd      = varargin{4};
+                self.passwd      = varargin{4};
             end
 
         end%obj redis
         
         %% redis call command
         % for debugging and not directly supported redis functions
-        function ret = call(r, command)
+        function ret = call(self, command)
 
-            ret = redis_(r.hostname, r.port, r.db, r.passwd, command);
+            ret = redis_(self.hostname, self.port, self.db, self.passwd, command);
 
         end%call
 
         %% redis functions
-        function ret = set(r, key, value)
+        function ret = set(self, key, value)
 
             if ischar(key) && (0 == any(isspace(key)))
-                if r.exists(key) && (0 == r.silentOverwrite)
+                if self.exists(key) && (0 == self.silentOverwrite)
                     error('KEY %s exists already', key);
                 end
 
@@ -63,12 +69,12 @@ classdef redis
                 elseif isnumeric(value)
                     % delete %s.serialstring without checking, because it isn't
                     % a serialstring anymore
-                    r.del([key '.serialstring']);
-                    ret = r.call(sprintf('SET %s %s', key, num2str(value, r.precision))); 
+                    self.del([key '.serialstring']);
+                    ret = self.call(sprintf('SET %s %s', key, num2str(value, self.precision))); 
 
                 elseif ischar(value) 
                     % the uggly part!!
-                    r.del([key '.serialstring']);
+                    self.del([key '.serialstring']);
                     if any(isspace(value))
                         % yeah, serialize it quick & dirty!
                         if (exist('OCTAVE_VERSION', 'builtin') == 5)
@@ -76,16 +82,16 @@ classdef redis
                         else
                             value = sprintf('%d,', unicode2native(value));
                         end                        
-                        r.call(sprintf('SET %s.serialstring 1', key));
+                        self.call(sprintf('SET %s.serialstring 1', key));
                     elseif (exist('OCTAVE_VERSION', 'builtin') ~= 5) 
                         % matlab encoding is terrible
                         % it's a must have, otherwise it's not possible to
                         % save special characters from matlab
                         value = sprintf('%d,', unicode2native(value));
-                        r.call(sprintf('SET %s.serialstring 1', key));
+                        self.call(sprintf('SET %s.serialstring 1', key));
                     end%if isspace
                     
-                    ret = r.call(sprintf('SET %s %s', key, value));   
+                    ret = self.call(sprintf('SET %s %s', key, value));   
 
                 end%if check classtype
             else
@@ -94,11 +100,11 @@ classdef redis
             
         end%set
 
-        function ret = get(r, key)
+        function ret = get(self, key)
             
             if ischar(key) && (0 == any(isspace(key)))
-                ret = r.call(sprintf('GET %s', key));
-                if r.exists([key '.serialstring'])
+                ret = self.call(sprintf('GET %s', key));
+                if self.exists([key '.serialstring'])
                     if (exist('OCTAVE_VERSION', 'builtin') == 5)
                         ret = char(sscanf(ret, '%d,')');
                     else
@@ -111,56 +117,87 @@ classdef redis
 
         end%get
 
-        function ret = incr(r, key)
+        function ret = incr(self, key)
 
-            ret = r.call(['INCR ' key]);
+            ret = self.call(['INCR ' key]);
 
         end%incr
 
-        function ret = decr(r, key)
+        function ret = decr(self, key)
 
-            ret = r.call(['DECR ' key]);
+            ret = self.call(['DECR ' key]);
 
         end%decr
 
-        function ret = ping(r)
+        function ret = ping(self)
 
-            ret = r.call('PING');
+            ret = self.call('PING');
 
         end%ping
         
-        function ret = del(r, varargin)
+        function ret = del(self, varargin)
             
             %let's hope every input is a whitespace-free char
             vars = sprintf('%s ', varargin{:});
-            ret = r.call(['DEL ' vars]);
+            ret = self.call(['DEL ' vars]);
             
         end%del
         
-        function ret = exists(r, keyname)
+        function ret = exists(self, keyname)
             
             if ischar(keyname) && (0 == any(isspace(keyname)))
-                ret = r.call(['EXISTS ' keyname]);
+                ret = self.call(['EXISTS ' keyname]);
             else
                 error('Input must be a whitespace-free string')
             end
             
         end%exists
         
-        function ret = type(r, keyname)
+        function ret = type(self, keyname)
             
             if ischar(keyname) && (0 == any(isspace(keyname)))
-                ret = r.call(['TYPE ' keyname]);
+                ret = self.call(['TYPE ' keyname]);
             else
                 error('Input must be a whitespace-free string')
             end
             
         end%type
+        
+        %% TODO SUBCLASS
+        function self = pipeline(self, command)
+            
+            persistent count
+            if isempty(count)
+                count = 0;
+            end
+            
+            if ischar(command)  
+                count = count + 1;
+                self.swap{count, 1} = command;  
+                                
+                if (count == self.batchsize)
+                    self = self.pipeline(true);
+                end
+                
+            elseif (command)
+                self.call(self.swap(~cellfun('isempty',self.swap)));
+                count = 0;
+                self.swap = cell(self.batchsize,1);
+            else
+                error('input musst be a string')
+            end
+                
+                
+        end%pipeline
+        
+        function self = execute(self)
+            self = self.pipeline(true);
+        end%execute
 
         
         %% Matlab/Octave special
         % save array in redis
-        function ret = array2redis(r, array, name)
+        function ret = array2redis(self, array, name)
             
             if (exist('OCTAVE_VERSION', 'builtin') == 5) && (nargin == 2)
                error('Currently you have to name you array using array2redis in Octave')
@@ -179,18 +216,18 @@ classdef redis
             
             if isnumeric(array)
                 
-                if (1 == r.exists(varname)) && (0 == r.silentOverwrite)
+                if (1 == self.exists(varname)) && (0 == self.silentOverwrite)
                     error('KEY %s exists already', varname);
                 else
-                    r.del(varname, [varname '.values'], [varname '.dimension']);
+                    self.del(varname, [varname '.values'], [varname '.dimension']);
                 end
                 
                 % save array in a list
-                ret1 = r.call(sprintf('RPUSH %s.values %s', varname, num2str(array(:)', r.precision)));
+                ret1 = self.call(sprintf('RPUSH %s.values %s', varname, num2str(array(:)', self.precision)));
                 % save dimension in a key
-                ret2 = r.call(sprintf('RPUSH %s.dimension %s', varname, num2str(size(array), r.precision)));
+                ret2 = self.call(sprintf('RPUSH %s.dimension %s', varname, num2str(size(array), self.precision)));
                 % group values and dimension
-                ret3 = r.call(sprintf('SADD %s %s.values %s.dimension', varname, varname, varname));
+                ret3 = self.call(sprintf('SADD %s %s.values %s.dimension', varname, varname, varname));
                 
                 if (isnumeric(ret1) && isnumeric(ret2) && isnumeric(ret3))
                     ret = true();
@@ -204,14 +241,14 @@ classdef redis
             
         end%function array2redis
         
-        function ret = redis2array(r, keyname)
+        function ret = redis2array(self, keyname)
             
             if ischar(keyname) && (0 == any(isspace(keyname)))
-                valueVar        = r.exists([keyname '.values']);
-                dimensionVar    = r.exists([keyname '.dimension']);
+                valueVar        = self.exists([keyname '.values']);
+                dimensionVar    = self.exists([keyname '.dimension']);
                 if valueVar && dimensionVar
-                    ret         = r.call(sprintf('LRANGE %s.values 0 -1', keyname));
-                    dimension   = r.call(sprintf('LRANGE %s.dimension 0 -1', keyname));
+                    ret         = self.call(sprintf('LRANGE %s.values 0 -1', keyname));
+                    dimension   = self.call(sprintf('LRANGE %s.dimension 0 -1', keyname));
                     ret = reshape(str2double(ret),str2double(dimension)');
                 else
                     ret = false();
@@ -224,11 +261,11 @@ classdef redis
         
         %% HIGH EXPERIMENTAL
         % https://github.com/markuman/go-redis/wiki/Gaussian-elimination
-        function ret = gaussian(r, a, b)
+        function ret = gaussian(self, a, b)
             % currently sum of gaussian.lua
             % 15d33d14f48708a38a828adbfb1f464798ad8e59 in redis
-            retVar = r.call(sprintf('EVALSHA 15d33d14f48708a38a828adbfb1f464798ad8e59 2 %s %s', a, b));
-            ret = r.redis2array(retVar);
+            retVar = self.call(sprintf('EVALSHA 15d33d14f48708a38a828adbfb1f464798ad8e59 2 %s %s', a, b));
+            ret = self.redis2array(retVar);
         end
        
 % whitspaces fuckup!
