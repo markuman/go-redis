@@ -16,7 +16,7 @@ For more detailed information next to this `README.md`, take a look at the Wiki
 # Requirements
 
 * Classdef support
-  * Octave >= 4.0 _yeah, not released yet! :)_
+  * Octave >= 4.0 
   * Matlab >= R2012b? _(dunno when classdef was introduced...)_
 * C-Compiler
 * [hiredis library](https://github.com/redis/hiredis/)
