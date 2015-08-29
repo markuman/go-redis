@@ -200,7 +200,7 @@ An array reply will be transformed into a cell array in Octave/Matlab.
 
 Using `r.pipeline` will speedup your writing commands 2-3x.
 
-_But be aware, Currently `pipeline()` is not implemented as a subclass! That means you have to put everything into a string by yourself at the moment._
+_But be aware, `pipeline()` is not implemented as a subclass! That means you have to put everything into a string by yourself at the moment._
 
 But the cool thing is: the pipeline is executed automatically when a number of commands is reached. The default value of `r.batchsize` is `64`.
 So you just need to call `r.execute()` (Yes, it takes no arguments!) one time when you're done to get execute the rest in your pipeline.
