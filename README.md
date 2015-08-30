@@ -25,6 +25,10 @@ For more detailed information next to this `README.md`, take a look at the Wiki
 
 # Build instructions
 
+    >> cd go-redis/mex
+    >> setup
+    >> % go where ever you wand and do addpath ('go-redis/inst')
+
 ### Matlab
 
 You can compile it directly in the Matlab commandline.
@@ -96,10 +100,11 @@ You can compile it in bash too
  * `precision`
    * type double
    * number of decimal points
- * `silentOverwrite
+ * `silentOverwrite`
    * type boolean
    * default `false` - will never overwrite existing keys
-
+ * `batchsize`
+   * when number of commands in `pipeline` == `batchsize`, it automatically execute the `pipeline`.
 
 ## usage
 
@@ -170,11 +175,11 @@ return will be true or false
 `r.type(key)`
 return will be a string
 
-        >> r.del('s')
+        >> r.typ('s')
 
         ans =
 
-             1
+             string
 
 ### array reply
 An array reply will be transformed into a cell array in Octave/Matlab.
