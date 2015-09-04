@@ -89,18 +89,25 @@ You can compile it in bash too
 
  * `hostname`
    * type char
+   * default: `127.0.0.1`
  * `port`
    * type double
+   * default: `6379`
  * `db`
    * type double
+   * default: `0`
    * database number to use
  * `pwd`
    * type char
+   * default: empty
    * auth password
  * `precision`
    * type double
-   * number of decimal points
+   * default: `4`
+   * number of decimal points stored in `array2redis()`
  * `batchsize`
+   * type double
+   * default: `64`
    * when number of commands in `pipeline` == `batchsize`, it automatically execute the `pipeline`.
 
 ## usage
@@ -116,7 +123,6 @@ You can compile it in bash too
                  db: 0
              passwd: ''
           precision: 4
-    silentOverwrite: 0
           batchsize: 64
 
 ### ping the redis server
@@ -194,7 +200,7 @@ An array reply will be transformed into a cell array in Octave/Matlab.
 * for debugging 
 * functions that are not directly supported by redis() class
 * for disable the overhead of redis() class functions
-* command can be a string or a cell.
+* command can be a string or a cell (e.g. `{'SET', 'my keyname', 'this is a value'}`)
 
 ### PIPELINE
 `r.pipeline(command)` 
