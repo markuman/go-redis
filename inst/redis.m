@@ -12,12 +12,12 @@ classdef redis
         db
         passwd
         precision
-        silentOverwrite
         batchsize
     end%properties
 
     properties (Access = protected)
        swap
+       count
     end
 
     methods
@@ -29,9 +29,9 @@ classdef redis
             self.db              = 0;
             self.passwd          = '';
             self.precision       = 4;
-            self.silentOverwrite = false;
             self.batchsize       = 64;
             self.swap            = cell(self.batchsize,1);
+            self.count           = 0;
             if nargin >= 1
                 self.hostname    = varargin{1};
             end
@@ -50,74 +50,45 @@ classdef redis
         %% redis call command
         % for debugging and not directly supported redis functions
         function ret = call(self, command)
+            % command can be a single string, but than, keynames and values
+            % are not whitespace-safe
+            % when the command it a cell, separated in command, key, value,
+            % than everything is whitespace-safe
 
             ret = redis_(self.hostname, self.port, self.db, self.passwd, command);
 
         end%call
 
-        %% redis call command, which enables whitespace
-        function ret = key_value_call(self, command, key, value)
-
-            ret = redis_(self.hostname, self.port, self.db, self.passwd, key, value, [command ' %s %s']);
-
-        end
-
         %% redis functions
         function ret = set(self, key, value)
-
-            if ischar(key) && (0 == any(isspace(key)))
-                if self.exists(key) && (0 == self.silentOverwrite)
-                    error('KEY %s exists already', key);
+            if ischar(key)
+                if any(isspace(key))
+                    key = ['"' key '"'];
                 end
-
-                if iscell(value)
-                    error('cell is not supported for set. Serilalize yourself')
-
-                elseif isnumeric(value)
-                    % delete %s.serialstring without checking, because it isn't
-                    % a serialstring anymore
-                    self.del([key '.serialstring']);
-                    ret = self.call(sprintf('SET %s %s', key, num2str(value, self.precision)));
+                if isnumeric(value)
+                    ret = self.call({'SET', key, num2str(value, self.precision) });
 
                 elseif ischar(value)
-                    % the uggly part!!
-                    self.del([key '.serialstring']);
                     if any(isspace(value))
-                        % yeah, serialize it quick & dirty!
-                        if (exist('OCTAVE_VERSION', 'builtin') == 5)
-                            value = sprintf('%d,', uint8(value));
-                        else
-                            value = sprintf('%d,', unicode2native(value));
-                        end
-                        self.call(sprintf('SET %s.serialstring 1', key));
-                    elseif (exist('OCTAVE_VERSION', 'builtin') ~= 5)
-                        % matlab encoding is terrible
-                        % it's a must have, otherwise it's not possible to
-                        % save special characters from matlab
-                        value = sprintf('%d,', unicode2native(value));
-                        self.call(sprintf('SET %s.serialstring 1', key));
-                    end%if isspace
-
-                    ret = self.call(sprintf('SET %s %s', key, value));
-
-                end%if check classtype
+                        value =  ['"' value '"'];
+                    end
+                    ret = self.call({'SET', key, value});
+                else
+                    error('value must be a char or numeric')
+                end
             else
-                error('Input "key" must be a whitespace-free string')
+                error('key must be a char')
             end
 
         end%set
 
         function ret = get(self, key)
 
-            if ischar(key) && (0 == any(isspace(key)))
-                ret = self.call(sprintf('GET %s', key));
-                if self.exists([key '.serialstring'])
-                    if (exist('OCTAVE_VERSION', 'builtin') == 5)
-                        ret = char(sscanf(ret, '%d,')');
-                    else
-                        ret = native2unicode(sscanf(ret, '%d,')');
-                    end
+            if ischar(key)
+                if any(isspace(key))
+                    key = ['"' key '"'];
                 end
+                ret = self.call({'GET', key});
             else
                 error('keyname must be a whitespace-free string')
             end
@@ -125,14 +96,18 @@ classdef redis
         end%get
 
         function ret = incr(self, key)
-
-            ret = self.call(['INCR ' key]);
+            if any(isspace(key))
+                key = ['"' key '"'];
+            end
+            ret = self.call({'INCR', key});
 
         end%incr
 
         function ret = decr(self, key)
-
-            ret = self.call(['DECR ' key]);
+            if any(isspace(key))
+                key = ['"' key '"'];
+            end
+            ret = self.call({'DECR', key});
 
         end%decr
 
@@ -144,28 +119,32 @@ classdef redis
 
         function ret = del(self, varargin)
 
-            %let's hope every input is a whitespace-free char
-            vars = sprintf('%s ', varargin{:});
-            ret = self.call(['DEL ' vars]);
+            ret = self.call({'DEL', varargin{:}});
 
         end%del
 
         function ret = exists(self, keyname)
 
-            if ischar(keyname) && (0 == any(isspace(keyname)))
-                ret = self.call(['EXISTS ' keyname]);
+            if ischar(keyname)
+                if any(isspace(keyname))
+                    keyname = ['"' keyname '"'];
+                end
+                ret = self.call({'EXISTS', keyname});
             else
-                error('Input must be a whitespace-free string')
+                error('Input must be a char')
             end
 
         end%exists
 
         function ret = type(self, keyname)
 
-            if ischar(keyname) && (0 == any(isspace(keyname)))
-                ret = self.call(['TYPE ' keyname]);
+            if ischar(keyname)
+                if any(isspace(keyname))
+                    keyname = ['"' keyname '"'];
+                end
+                ret = self.call({'TYPE', keyname});
             else
-                error('Input must be a whitespace-free string')
+                error('Input must be a char')
             end
 
         end%type
@@ -173,22 +152,17 @@ classdef redis
         %% TODO SUBCLASS
         function self = pipeline(self, command)
 
-            persistent count
-            if isempty(count)
-                count = 0;
-            end
-
             if ischar(command)
-                count = count + 1;
-                self.swap{count, 1} = command;
+                self.count = self.count + 1;
+                self.swap{self.count, 1} = command;
 
-                if (count == self.batchsize)
+                if (self.count == self.batchsize)
                     self = self.pipeline(true);
                 end
 
             elseif (command)
                 self.call(self.swap(~cellfun('isempty',self.swap)));
-                count = 0;
+                self.count = 0;
                 self.swap = cell(self.batchsize,1);
             else
                 error('input musst be a string')
@@ -223,10 +197,8 @@ classdef redis
 
             if isnumeric(array)
 
-                if (1 == self.exists(varname)) && (0 == self.silentOverwrite)
+                if (1 == self.exists(varname)) 
                     error('KEY %s exists already', varname);
-                else
-                    self.del(varname, [varname '.values'], [varname '.dimension']);
                 end
 
                 % save array in a list

@@ -135,7 +135,6 @@ You can compile it in bash too
 
  * value can be a double or a char
  * doubles will be converted to char
- * if value is a char with whitespaces, it will be serialized. for more informations, take a look at the wiki
 
         ret = r.set('go-redis', 1)
 
@@ -175,7 +174,7 @@ return will be true or false
 `r.type(key)`
 return will be a string
 
-        >> r.typ('s')
+        >> r.type('s')
 
         ans =
 
@@ -196,8 +195,9 @@ An array reply will be transformed into a cell array in Octave/Matlab.
 `r.call(command)`
 
 * for debugging 
-* functions that are directly supported by redis() class
+* functions that are not directly supported by redis() class
 * for disable the overhead of redis() class functions
+* command can be a string or a cell.
 
 ### PIPELINE
 `r.pipeline(command)` 
