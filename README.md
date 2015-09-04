@@ -100,9 +100,6 @@ You can compile it in bash too
  * `precision`
    * type double
    * number of decimal points
- * `silentOverwrite`
-   * type boolean
-   * default `false` - will never overwrite existing keys
  * `batchsize`
    * when number of commands in `pipeline` == `batchsize`, it automatically execute the `pipeline`.
 
