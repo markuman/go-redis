@@ -48,5 +48,10 @@ assert(r.exists('B space key') == 1)
 assert(OK(r.rename('B space key', 'B_key')))
 assert(r.exists('B space key') == 0)
 assert(r.exists('B_key') == 1)
+assert(r.move('B_key', 1) == 1)
+assert(r.exists('B_key') == 0)
+r.db = 1;
+assert(r.exists('B_key') == 1)
+
 
 fprintf('\n everything passed\n')

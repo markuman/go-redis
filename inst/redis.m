@@ -137,6 +137,14 @@ classdef redis
                 error('keynames have to be chars')
             end
         end%rename
+        
+        function ret = move(self, keyname, db)
+            if ischar(keyname)
+                ret = self.call({'MOVE', keyname, num2str(db)});
+            else
+                error('keynames have to be chars')
+            end
+        end%move
 
         function ret = exists(self, keyname)
             if ischar(keyname)
