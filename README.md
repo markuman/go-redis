@@ -36,6 +36,7 @@ For more detailed information next to this `README.md`, take a look at the Wiki
 3. mex.h
   * Distributed with your Matlab or GNU Octave installation
 4. clone/download and build go-redis directly from Matlab/GNU Octave
+
     >> cd go-redis/mex
     >> setup
     >> % go where ever you want and just do "addpath ('go-redis/inst')"
