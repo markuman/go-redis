@@ -30,10 +30,12 @@ For more detailed information next to this `README.md`, take a look at the Wiki
   * Arch:   `sudo pacman -S base-devel`
   * Mac:    Install xcode
 2. install [hiredis library](https://github.com/redis/hiredis/)
-  * Ubuntu: `sudo apt-get install `
+  * Ubuntu: `sudo apt-get install libhiredis-dev libhiredis0.10` _*for 14.04 LTS_
   * Arch:   `sudo pacman -S hiredis`
   * Mac:    `brew install hiredis`
-3. clone/download and build go-redis directly from Matlab/GNU Octave
+3. mex.h
+  * Distributed with your Matlab or GNU Octave installation
+4. clone/download and build go-redis directly from Matlab/GNU Octave
     >> cd go-redis/mex
     >> setup
     >> % go where ever you want and just do "addpath ('go-redis/inst')"
