@@ -21,6 +21,7 @@ classdef redis
        swap
        count
        gaussian_hash
+       array_hash
     end
 
     methods
@@ -36,6 +37,7 @@ classdef redis
             self.swap            = cell(self.batchsize,1);
             self.count           = 0;
             self.gaussian_hash   = 'd27dd80c5140dc267180c03888ba933f8fa0324b';
+            self.array_hash      = '91f730fc8f3613bd11019977f72ddd205b6d5f85';
             if nargin >= 1
                 self.hostname    = varargin{1};
             end
@@ -364,12 +366,71 @@ classdef redis
             retVar = self.call(sprintf('EVALSHA %s 2 %s %s', self.gaussian_hash, a, b));
             ret = self.redis2array(retVar);
         end
+        
+        function ret = rand(self, key, varargin)
+            dimension = cell2mat(varargin);
+            n         = prod(dimension);
+            if (1 == self.exists(key))
+                self.del(key);
+                self.del([key '.values']);
+                self.del([key '.dimension']);
+            end
+            assert(self.call(sprintf('EVALSHA %s 1 %s rand %d', self.array_hash, key, n)) == 0, 'Looks like createArrays.lua isn''t loaded into your redis instance');
+            % save dimension in a key
+            assert(self.call(sprintf('RPUSH %s.dimension %s', key, num2str(dimension))) == numel(dimension), 'failed to save dimension of the array');
+            % group values and dimension
+            assert(self.call(sprintf('SADD %s %s.values %s.dimension', key, key, key)) == 2, 'failed to group dimension list and values list');
+            ret = true;
+        end%rand
+        
+        function ret = ones(self, key, varargin)
+            dimension = cell2mat(varargin);
+            n         = prod(dimension);
+            if (1 == self.exists(key))
+                self.del(key);
+                self.del([key '.values']);
+                self.del([key '.dimension']);
+            end
+            assert(self.call(sprintf('EVALSHA %s 1 %s ones %d', self.array_hash, key, n)) == 0, 'Looks like createArrays.lua isn''t loaded into your redis instance');
+            % save dimension in a key
+            assert(self.call(sprintf('RPUSH %s.dimension %s', key, num2str(dimension))) == numel(dimension), 'failed to save dimension of the array');
+            % group values and dimension
+            assert(self.call(sprintf('SADD %s %s.values %s.dimension', key, key, key)) == 2, 'failed to group dimension list and values list');
+            ret = true;
+        end%ones
+        
+        function ret = zeros(self, key, varargin)
+            dimension = cell2mat(varargin);
+            n         = prod(dimension);
+            if (1 == self.exists(key))
+                self.del(key);
+                self.del([key '.values']);
+                self.del([key '.dimension']);
+            end
+            assert(self.call(sprintf('EVALSHA %s 1 %s zeros %d', self.array_hash, key, n)) == 0, 'Looks like createArrays.lua isn''t loaded into your redis instance');
+            % save dimension in a key
+            assert(self.call(sprintf('RPUSH %s.dimension %s', key, num2str(dimension))) == numel(dimension), 'failed to save dimension of the array');
+            % group values and dimension
+            assert(self.call(sprintf('SADD %s %s.values %s.dimension', key, key, key)) == 2, 'failed to group dimension list and values list');
+            ret = true;
+        end%zeros
 
         function self = loadGaussian(self, file)
             fid = fopen(file,'r');
             if fid >= 3
                 luastring = fread (fid, 'char=>char').';
                 self.gaussian_hash = self.call({'SCRIPT', 'LOAD', luastring});
+                fclose(fid);
+            else
+                error('failed to load file private/gaussian.lua')
+            end%if
+        end%function
+        
+        function self = loadcreateArrays(self, file)
+            fid = fopen(file,'r');
+            if fid >= 3
+                luastring = fread (fid, 'char=>char').';
+                self.array_hash = self.call({'SCRIPT', 'LOAD', luastring});
                 fclose(fid);
             else
                 error('failed to load file private/gaussian.lua')
