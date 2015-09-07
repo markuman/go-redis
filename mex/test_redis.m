@@ -63,9 +63,13 @@ if strcmp('YES', str)
     assert(r.append('mykey', 'O') == 1)
     assert(r.append('mykey', 'K') == 2)
     assert(OK(r.get('mykey')))
-
-
-
+    assert(r.strlen('mykey') == 2)
+    assert(r.incr('A') == 1)
+    assert(r.incrby('A', 9) == 10)
+    assert(r.decrby('A', 5) == 5)
+    assert(strcmp('5.5', r.incrbyfloat('A', 0.5)))
+    
+    
 
     fprintf('\n everything passed\n')
 end

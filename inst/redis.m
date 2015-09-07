@@ -124,10 +124,26 @@ classdef redis
         function ret = incr(self, key)
             ret = self.call({'INCR', key});
         end%incr
-
+        
+        function ret = incrby(self, key, value)
+            ret = self.call({'INCRBY', key, num2str(value)});
+        end%incrby
+        
+        function ret = incrbyfloat(self, key, value)
+            ret = self.call({'INCRBYFLOAT', key, num2str(value)});
+        end%incrbyfloat
+        
         function ret = decr(self, key)
             ret = self.call({'DECR', key});
         end%decr
+        
+        function ret = decrby(self, key, value)
+            ret = self.call({'DECRBY', key, num2str(value)});
+        end%decrby
+        
+        function ret = strlen(self, key)
+            ret = self.call({'STRLEN', key});
+        end%strlen
 
         function ret = ping(self)
             ret = self.call('PING');
