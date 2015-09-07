@@ -5,6 +5,8 @@ classdef redis
     % r = redis(hostname, port)
     % r = redis(hostname, port, db)
     % r = redis(hostname, port, db, passwd)
+    % r = redis(hostname, port, db, passwd, precision)
+    % r = redis(hostname, port, db, passwd, precision, batchsize)
 
     properties
         hostname
@@ -41,8 +43,14 @@ classdef redis
             if nargin >= 3
                 self.db          = varargin{3};
             end
-            if nargin >=4
+            if nargin >= 4
                 self.passwd      = varargin{4};
+            end
+            if nargin >= 5
+                self.precision   = varargin{5};
+            end
+            if nargin >= 6
+                self.batchsize   = varargin{6};
             end
 
         end%obj redis
@@ -69,9 +77,6 @@ classdef redis
                     ret = self.call({'SET', key, num2str(value, self.precision) });
 
                 elseif ischar(value)
-                    if any(isspace(value))
-                        value =  ['"' value '"'];
-                    end
                     ret = self.call({'SET', key, value});
                 else
                     error('value must be a char or numeric')
