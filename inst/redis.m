@@ -252,8 +252,8 @@ classdef redis
             ret = self.redis2array(retVar);
         end
 
-        function self = loadGaussian(self)
-            fid = fopen('gaussian.lua','r');
+        function self = loadGaussian(self, file)
+            fid = fopen(file,'r');
             if fid >= 3
                 luastring = fread (fid, 'char=>char').';
                 self.gaussian_hash = self.call({'SCRIPT', 'LOAD', luastring});
