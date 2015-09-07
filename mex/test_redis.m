@@ -68,6 +68,18 @@ if strcmp('YES', str)
     assert(r.incrby('A', 9) == 10)
     assert(r.decrby('A', 5) == 5)
     assert(strcmp('5.5', r.incrbyfloat('A', 0.5)))
+    assert(r.array2redis(reshape(1:24, 4, []), 'm') == 1)
+    assert(all(all(reshape(1:24, 4, []) == r.redis2array('m'))))
+    assert(r.numel('m') == 24)
+    assert(all(r.size('m') == [4 6]))
+    assert(all(all(r.range2array('m', [1 3], 3:5) == [9 13 17; 11 15 19])))
+    assert(all(all(r.range2array('m', 1:3, 3:5) == [9 13 17; 10 14 18; 11 15 19])))
+    assert(r.array2redis(reshape(1:27, 3, 3, 3), 'm') == 1)
+    assert(all(all(all(reshape(1:27, 3, 3, 3) == r.redis2array('m')))))
+    assert(r.numel('m') == 27)
+    assert(all(r.size('m') == [3 3 3]))
+    assert(all(all(r.range2array('m', [1 3], 1:3, 1) == [1 4 7; 3 6 9])))
+    assert(all(all(all(r.range2array('m', [1 3], 1:3, 1:2) == cat(3,[1 4 7;3 6 9],[10 13 16;12 15 18])))))
     
     
 
