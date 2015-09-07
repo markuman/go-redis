@@ -32,6 +32,7 @@ if strcmp('YES', str)
     setup
     addpath('../inst/')
     r = redis();
+    % test basics
     assert(strcmp('PONG',r.ping()))
     assert(OK(r.call('flushall')))
     assert(OK(r.set('A', '1')))
@@ -44,11 +45,13 @@ if strcmp('YES', str)
     assert(r.exists('A') == 0)
     assert(iscell(r.call('keys *')))
     assert(iscell(r.call({'keys','*'})))
+    % test whitespaces in keys and values
     assert(OK(r.set('B', 'a whitespace value')))
     assert(strcmp('a whitespace value', r.get('B')))
     assert(OK(r.set('B space key', 'a whitespace value')))
     assert(strcmp('a whitespace value', r.get('B space key')))
     assert(r.exists('B space key') == 1)
+    % test renameing and moving
     assert(OK(r.rename('B space key', 'B_key')))
     assert(r.exists('B space key') == 0)
     assert(r.exists('B_key') == 1)
@@ -60,6 +63,7 @@ if strcmp('YES', str)
     assert(r.move('B_key', '0') == 0)
     r.db = 0;
     assert(r.exists('B_key') == 1)
+    % test append strlen and incr* decr* commands
     assert(r.append('mykey', 'O') == 1)
     assert(r.append('mykey', 'K') == 2)
     assert(OK(r.get('mykey')))
@@ -68,6 +72,7 @@ if strcmp('YES', str)
     assert(r.incrby('A', 9) == 10)
     assert(r.decrby('A', 5) == 5)
     assert(strcmp('5.5', r.incrbyfloat('A', 0.5)))
+    % test octave/matlab specific array commands
     assert(r.array2redis(reshape(1:24, 4, []), 'm') == 1)
     assert(all(all(reshape(1:24, 4, []) == r.redis2array('m'))))
     assert(r.numel('m') == 24)
