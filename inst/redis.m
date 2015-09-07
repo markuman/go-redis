@@ -280,13 +280,29 @@ classdef redis
 
         end%function redis2array
         
-        function ret = arraySize(self, keyname)
+        function ret = numel(self, keyname)
+            % determine number of elements in an Octave/Matlab array
+            dimensionVar    = self.exists([keyname '.dimension']);
+            if (dimensionVar)
+                dimension   = self.call(sprintf('LRANGE %s.dimension 0 -1', keyname));
+                ret = prod(str2double(dimension)');
+            else
+                % keyname is not an Octave/Matlab array
+                ret = NaN;
+            end
+        end%numel
+        
+        function ret = size(self, keyname)
+            % determine size of an Octave/Matlab array
             dimensionVar    = self.exists([keyname '.dimension']);
             if (dimensionVar)
                 dimension   = self.call(sprintf('LRANGE %s.dimension 0 -1', keyname));
                 ret = str2double(dimension)';
+            else
+                % keyname is not an Octave/Matlab array
+                ret = NaN;
             end
-        end%arraySize
+        end%size
         
         function ret = range2array(self, keyname, varargin)
             
@@ -301,35 +317,43 @@ classdef redis
                     origin_pairs    = [x(:) y(:)];
                     origin_linInd   = sub2ind(str2double(origin_dimension), origin_pairs(:,1), origin_pairs(:,2));
                     % build dimension of reguested range
-                    dimension       = [varargin{1}(end) - varargin{1}(1) + 1, varargin{2}(end) - varargin{2}(1) + 1];
+                    dimension       = [numel(varargin{1}), numel(varargin{2})];
+                    [nx, ny]        = meshgrid(varargin{1} - min(varargin{1}) + 1, varargin{2} - min(varargin{2}) + 1);
+                    pairs           = [nx(:) ny(:)];
+                    linInd          = sub2ind(max(pairs), pairs(:,1), pairs(:,2));
                 elseif numel(varargin) == 3
                     [x, y, z]       = meshgrid(varargin{1}, varargin{2}, varargin{3});
                     origin_pairs    = [x(:) y(:) z(:)];
                     origin_linInd   = sub2ind(str2double(origin_dimension)', origin_pairs(:,1), origin_pairs(:,2), origin_pairs(:,3));
-                    dimension       = [varargin{1}(end) - varargin{1}(1) + 1, varargin{2}(end) - varargin{2}(1) + 1, varargin{3}(end) - varargin{3}(1) + 1];
+                    dimension       = [numel(varargin{1}), numel(varargin{2}), numel(varargin{3})];
                     [nx, ny, nz]    = meshgrid(varargin{1} - min(varargin{1}) + 1, varargin{2} - min(varargin{2}) + 1, varargin{3} - min(varargin{3}) + 1);
                     pairs           = [nx(:) ny(:) nz(:)];
-                    linInd          = sub2ind(dimension, pairs(:,1), pairs(:,2), pairs(:,3));
+                    linInd          = sub2ind(max(pairs), pairs(:,1), pairs(:,2), pairs(:,3));
                 else
                     error('error')
                 end
                 
                 tmp    = zeros(numel(origin_linInd),1);
-                % matlab/octave index starts by 1, redis index starts by 0. 
-                strInd = num2str(origin_linInd - 1);
-                
+                % matlab/octave index starts by 1, redis index starts by 0.                
                 % maybe this can be improved. sort origin_linInd and read
                 % indices in blocks with lrange
                 for n = 1:numel(origin_linInd)
-                    tmp(n) = str2double(self.call({'LINDEX', [keyname '.values'], strInd(n,:)}));
+                    tmp(n) = str2double(self.call({'LINDEX', [keyname '.values'], num2str(origin_linInd(n) - 1)}));
                 end%for
                 
                 if numel(dimension) == 2
                     % lol            
-                    ret = reshape(tmp, flip(dimension))'; 
-                else
-                    ret = zeros(dimension);
+%                     ret = reshape(tmp, flip(dimension))'; 
+                    ret = NaN(max(pairs));
                     ret(linInd) = tmp;
+                    ret(isnan(ret)) = [];
+                    ret = reshape(ret, dimension);
+                    
+                else
+                    ret = NaN(max(pairs));
+                    ret(linInd) = tmp;
+                    ret(isnan(ret)) = [];
+                    ret = reshape(ret, dimension);
                 end
             end
         end%range2array
