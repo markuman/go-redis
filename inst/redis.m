@@ -88,6 +88,25 @@ classdef redis
             end
 
         end%set
+        
+        function ret = getset(self, key, value)
+            if ischar(key)
+                if any(isspace(key))
+                    key = ['"' key '"'];
+                end
+                if isnumeric(value)
+                    ret = self.call({'GETSET', key, num2str(value, self.precision) });
+
+                elseif ischar(value)
+                    ret = self.call({'GETSET', key, value});
+                else
+                    error('value must be a char or numeric')
+                end
+            else
+                error('key must be a char')
+            end
+
+        end%set
 
         function ret = get(self, key)
 
