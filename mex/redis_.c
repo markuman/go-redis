@@ -27,7 +27,7 @@
 // declarate some stuff
 char* redisReturn;
 char *hostname, *command, *password, *key, *value;
-int port, database, index;
+int port, database;
 char redisChar[19]; // afaik long enough for long long int
 mxArray *cell_array_ptr;
 
