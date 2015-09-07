@@ -25,11 +25,20 @@ For more detailed information next to this `README.md`, take a look at the Wiki
 
 # Build instructions
 
+1. install a C compiler
+  * Ubuntu: `sudo apt-get install build-essential`
+  * Arch:   `sudo pacman -S base-devel`
+  * Mac:    Install xcode
+2. install [hiredis library](https://github.com/redis/hiredis/)
+  * Ubuntu: `sudo apt-get install `
+  * Arch:   `sudo pacman -S hiredis`
+  * Mac:    `brew install hiredis`
+3. clone/download and build go-redis directly from Matlab/GNU Octave
     >> cd go-redis/mex
     >> setup
-    >> % go where ever you wand and do addpath ('go-redis/inst')
+    >> % go where ever you want and just do "addpath ('go-redis/inst')"
 
-### Matlab
+### Manually Matlab Instruction
 
 You can compile it directly in the Matlab commandline.
 
@@ -37,7 +46,7 @@ You can compile it directly in the Matlab commandline.
 
 Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
-### GNU Octave
+### Manually GNU Octave Instruction
 
 From GNU Octave commandline
 
@@ -48,19 +57,23 @@ Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 **Currently (3/19/2015) there is a bug in classdef. You have to do `addpath private` in octave as a workaround!**
 https://savannah.gnu.org/bugs/?41723
 
-### Bash
+### Manually Bash Instruction
 
 You can compile it in bash too
 
-    gcc -fPIC -I /usr/include/octave-3.8.2/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
+    gcc -fPIC -I <PATH TO mex.h> -lm -I <PATH TO hiredis.h> -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
+
+e.g. 
+
+    gcc -fPIC -I /usr/include/octave-4.0.0/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
 
 
 # todo
 
-* write a Makefile and maybe add `hiredis` as a submodule to simplify the setup process
+* maybe add `hiredis` as a submodule to simplify the setup process?
 * improve c-code
-* still some problems with unicodes...
-* more unittests
+* still some problems with unicodes between matlab and GNU Octave
+* improve `pipeline` (subclass, whitespace-safe, etc.)
 
 # limitations
 
@@ -133,10 +146,13 @@ You can compile it in bash too
 
         PONG
 
-### SET
-`r.set(key, value)`
+### SET, GET, GETSET, APPEND
+`r.set(key, value)`  
+`r.get(key)`  
+`r.getset(key, value)`  
+`r.append(key, value)`  
 
- * value can be a double or a char
+ * value can be a double or a char (expect `append` there it has to be a char)
  * doubles will be converted to char
 
         ret = r.set('go-redis', 1)
@@ -145,33 +161,47 @@ You can compile it in bash too
 
         OK
 
-### INCR & DECR
-`r.incr(key)`
-return type will be double.
+  * return type of `GET*` commands will be a char or a double _(depends on the reply of hiredis)_
+
+### INCR, DECR
+`r.incr(key)`  
+`r.decr(key)`
+
+* return type will be double.
 
         ret = r.incr('go-redis')
 
         ret = 2
 
-##### GET
-`r.get(key)`
-return type will be a char or a double _(depends on the reply of hiredis)_
 
-        ret = r.get('go-redis')
-
-        ret =
-
-        2
 
 ### DEL
 `r.del(key)`
-return will be true or false
+
+* return will be true (1) or false (0)
 
         >> r.del('s')
 
         ans =
 
              1
+
+### MOVE
+`r.del(key, dbnr)`
+
+* return will be true (1) or false (0)
+* `dbnr` can be a char `'1'` or a double `1`. 
+
+### RENAME
+`r.rename(oldkeyname, newkeyname)`
+
+* return will be `OK` or `ERR: ...` 
+* keynames have to be chars
+
+### SAVE
+`r.save()`
+
+* return will be `OK`
 
 ### TYPE
 `r.type(key)`
