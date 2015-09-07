@@ -97,8 +97,19 @@ classdef redis
             else
                 error('key must be a char')
             end
-
         end%set
+        
+        function ret = append(self, key, value)
+            if ischar(key)
+                if ischar(value)
+                    ret = self.call({'APPEND', key, value});
+                else
+                    error('value must be a char')
+                end
+            else
+                error('key must be a char')
+            end
+        end%append
 
         function ret = get(self, key)
 

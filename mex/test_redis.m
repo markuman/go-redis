@@ -14,7 +14,7 @@ end
 
 %% testing core redis_ mex function
 assert(strcmp('PONG',redis_('PING')))
-assert(OK(redis_('flushdb')))
+assert(OK(redis_('flushall')))
 assert(OK(redis_('SET A 1')))
 assert(OK(redis_({'SET', 'B', 'a whitespace value'})))
 assert(redis_('INCR A') == 2)
@@ -29,7 +29,7 @@ setup
 addpath('../inst/')
 r = redis();
 assert(strcmp('PONG',r.ping()))
-assert(OK(r.call('flushdb')))
+assert(OK(r.call('flushall')))
 assert(OK(r.set('A', '1')))
 assert(r.incr('A') == 2)
 assert(strcmp('2', r.getset('A', 3)))
@@ -52,6 +52,15 @@ assert(r.move('B_key', 1) == 1)
 assert(r.exists('B_key') == 0)
 r.db = 1;
 assert(r.exists('B_key') == 1)
+assert(r.move('B_key', '0') == 1)
+assert(r.move('B_key', '0') == 0)
+r.db = 0;
+assert(r.exists('B_key') == 1)
+assert(r.append('mykey', 'O') == 1)
+assert(r.append('mykey', 'K') == 2)
+assert(OK(r.get('mykey')))
+
+
 
 
 fprintf('\n everything passed\n')
