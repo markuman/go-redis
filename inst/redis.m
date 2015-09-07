@@ -20,6 +20,7 @@ classdef redis
     properties (Access = protected)
        swap
        count
+       gaussian_hash
     end
 
     methods
@@ -34,6 +35,7 @@ classdef redis
             self.batchsize       = 64;
             self.swap            = cell(self.batchsize,1);
             self.count           = 0;
+            self.gaussian_hash   = 'd27dd80c5140dc267180c03888ba933f8fa0324b';
             if nargin >= 1
                 self.hostname    = varargin{1};
             end
@@ -246,23 +248,20 @@ classdef redis
         %% HIGH EXPERIMENTAL
         % https://github.com/markuman/go-redis/wiki/Gaussian-elimination
         function ret = gaussian(self, a, b)
-            % currently sum of gaussian.lua
-            % 15d33d14f48708a38a828adbfb1f464798ad8e59 in redis
-            retVar = self.call(sprintf('EVALSHA 15d33d14f48708a38a828adbfb1f464798ad8e59 2 %s %s', a, b));
+            retVar = self.call(sprintf('EVALSHA %s 2 %s %s', self.gaussian_hash, a, b));
             ret = self.redis2array(retVar);
         end
 
-% whitspaces fuckup!
-%         function ret = loadGaussian(r)
-%             fid = fopen('private/gaussian.lua','r');
-%             if fid >= 3
-%                 luastring = fread (fid, 'char=>char').';
-%                 ret = redis_(r.hostname, r.port, r.db, r.passwd, sprintf('SCRIPT LOAD %s', luastring));
-%                 fclose(fid);
-%             else
-%                 error('failed to load file private/gaussian.lua')
-%             end%if
-%         end%function
+        function self = loadGaussian(self)
+            fid = fopen('gaussian.lua','r');
+            if fid >= 3
+                luastring = fread (fid, 'char=>char').';
+                self.gaussian_hash = self.call({'SCRIPT', 'LOAD', luastring});
+                fclose(fid);
+            else
+                error('failed to load file private/gaussian.lua')
+            end%if
+        end%function
 
     end%methods
 
