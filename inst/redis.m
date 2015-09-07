@@ -138,9 +138,11 @@ classdef redis
         end%decr
 
         function ret = ping(self)
-
             ret = self.call('PING');
-
+        end%ping
+        
+        function ret = save(self)
+            ret = self.call('SAVE');
         end%ping
 
         function ret = del(self, varargin)
