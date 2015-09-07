@@ -72,12 +72,8 @@ classdef redis
         %% redis functions
         function ret = set(self, key, value)
             if ischar(key)
-                if any(isspace(key))
-                    key = ['"' key '"'];
-                end
                 if isnumeric(value)
                     ret = self.call({'SET', key, num2str(value, self.precision) });
-
                 elseif ischar(value)
                     ret = self.call({'SET', key, value});
                 else
@@ -91,12 +87,8 @@ classdef redis
         
         function ret = getset(self, key, value)
             if ischar(key)
-                if any(isspace(key))
-                    key = ['"' key '"'];
-                end
                 if isnumeric(value)
                     ret = self.call({'GETSET', key, num2str(value, self.precision) });
-
                 elseif ischar(value)
                     ret = self.call({'GETSET', key, value});
                 else
@@ -111,9 +103,6 @@ classdef redis
         function ret = get(self, key)
 
             if ischar(key)
-                if any(isspace(key))
-                    key = ['"' key '"'];
-                end
                 ret = self.call({'GET', key});
             else
                 error('keyname must be a whitespace-free string')
@@ -122,19 +111,11 @@ classdef redis
         end%get
 
         function ret = incr(self, key)
-            if any(isspace(key))
-                key = ['"' key '"'];
-            end
             ret = self.call({'INCR', key});
-
         end%incr
 
         function ret = decr(self, key)
-            if any(isspace(key))
-                key = ['"' key '"'];
-            end
             ret = self.call({'DECR', key});
-
         end%decr
 
         function ret = ping(self)
@@ -143,38 +124,34 @@ classdef redis
         
         function ret = save(self)
             ret = self.call('SAVE');
-        end%ping
+        end%save
 
         function ret = del(self, varargin)
-
             ret = self.call({'DEL', varargin{:}});
-
         end%del
+        
+        function ret = rename(self, oldkeyname, newkeyname)
+            if ischar(oldkeyname) && ischar(newkeyname)
+                ret = self.call({'RENAME', oldkeyname, newkeyname});
+            else
+                error('keynames have to be chars')
+            end
+        end%rename
 
         function ret = exists(self, keyname)
-
             if ischar(keyname)
-                if any(isspace(keyname))
-                    keyname = ['"' keyname '"'];
-                end
                 ret = self.call({'EXISTS', keyname});
             else
                 error('Input must be a char')
             end
-
         end%exists
 
         function ret = type(self, keyname)
-
             if ischar(keyname)
-                if any(isspace(keyname))
-                    keyname = ['"' keyname '"'];
-                end
                 ret = self.call({'TYPE', keyname});
             else
                 error('Input must be a char')
             end
-
         end%type
 
         %% TODO SUBCLASS
