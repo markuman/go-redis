@@ -304,6 +304,11 @@ For reading a multidimension numeric array from redis back into workspace
             0.9058    0.6324    0.5469
             0.1270    0.0975    0.9575
 
+#### range2array
+`r.range2array(name, x, y, z)`  
+For reading just a range of an array which is stored in redis.  
+
+* it only support 2D and 3D numerical arrays
 
 
 # deprecated go-redis version
