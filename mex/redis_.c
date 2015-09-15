@@ -163,11 +163,6 @@ void mexFunction (int nlhs, mxArray *plhs[],
         plhs[0] = cell_array_ptr;
 
       } else if (reply->type == REDIS_REPLY_INTEGER) {
-        long long int t = reply->integer;
-        // save copy
-        //snprintf(redisChar, 19, "%lld",t);
-        //plhs[0] = mxCreateString(redisChar);
-
         plhs[0] = mxCreateDoubleScalar(reply->integer);
         
         // free redis
@@ -295,11 +290,6 @@ void mexFunction (int nlhs, mxArray *plhs[],
             plhs[0] = cell_array_ptr;
 
           } else if (reply->type == REDIS_REPLY_INTEGER) {
-            long long int t = reply->integer;
-            // save copy
-            //snprintf(redisChar, 19, "%lld",t);
-            //plhs[0] = mxCreateString(redisChar);
-
             plhs[0] = mxCreateDoubleScalar(reply->integer);
 
             // free redis
