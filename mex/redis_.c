@@ -168,11 +168,8 @@ void mexFunction (int nlhs, mxArray *plhs[],
         //snprintf(redisChar, 19, "%lld",t);
         //plhs[0] = mxCreateString(redisChar);
 
-        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
-        double *out;
-        out = mxGetPr(plhs[0]);
-        out[0] = t;
-
+        plhs[0] = mxCreateDoubleScalar(reply->integer);
+        
         // free redis
         freeReplyObject(reply);
         redisFree(c);
@@ -303,10 +300,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
             //snprintf(redisChar, 19, "%lld",t);
             //plhs[0] = mxCreateString(redisChar);
 
-            plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
-            double *out;
-            out = mxGetPr(plhs[0]);
-            out[0] = t;
+            plhs[0] = mxCreateDoubleScalar(reply->integer);
 
             // free redis
             freeReplyObject(reply);
