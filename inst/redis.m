@@ -195,15 +195,24 @@ classdef redis
         function self = pipeline(self, command)
 
             if ischar(command)
-                self.count = self.count + 1;
+                self.count = self.count + 1;                
                 self.swap{self.count, 1} = command;
 
                 if (self.count == self.batchsize)
                     self = self.pipeline(true);
                 end
-
+            elseif iscell(command)
+                self.count = self.count + 1;
+                self.swap(self.count, 1:size(command,2)) = command;
+                
+                if (self.count == self.batchsize)
+                    self = self.pipeline(true);
+                end
+                
             elseif (command)
-                self.call(self.swap(~cellfun('isempty',self.swap)));
+                emptyInd = ~cellfun(@isempty, self.swap(:,1));
+                % self.call(self.swap(~cellfun('isempty',self.swap)));
+                self.call(self.swap(emptyInd, :));
                 self.count = 0;
                 self.swap = cell(self.batchsize,1);
             else

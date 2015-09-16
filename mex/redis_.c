@@ -22,6 +22,9 @@
 // Matlab/GNU Octave specific includes
 #include <mex.h>
 
+// define column major order index
+#define CMOindex(c, r, rows) ( (c - 1) * rows + (r - 1) + 1 )
+
 //#define DEBUG
 
 // declarate some stuff
@@ -179,33 +182,75 @@ void mexFunction (int nlhs, mxArray *plhs[],
     } else if ( mxIsCell(prhs[nrhs - 1]) ){
       //redisReply *reply;
       const mxArray *cell_element_ptr;
-      char* c_array;
       mwIndex n;
-      mwSize m, buflen;
-      m = mxGetNumberOfElements(prhs[nrhs - 1]);      
+      mwSize buflen;
       #ifdef DEBUG
+        mwSize m = mxGetNumberOfElements(prhs[nrhs - 1]); 
         mexPrintf("%d cols\n", mxGetN(prhs[nrhs - 1]));
         mexPrintf("%d rows\n", mxGetM(prhs[nrhs - 1]));
         mexPrintf("%d elements\n", m);
       #endif
       int rows = mxGetM(prhs[nrhs - 1]);
-      
+      int cols = mxGetN(prhs[nrhs - 1]);
+      int reduceCol = 0;
       // PIPELINE
       if (rows > 1){
           // load the silverbullet
-          for (n = 0; n < m; n++){
-              cell_element_ptr = mxGetCell(prhs[nrhs - 1],n);
-              buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-              c_array = mxMalloc(buflen);
-              mxGetString(cell_element_ptr, c_array, buflen);
-              redisAppendCommand(c, c_array);
-              #ifdef DEBUG
-                mexPrintf("pipeline command: %s\n", c_array);
-              #endif // DEBUG
+          for (int r = 1; r <= rows; r++){
+              
+              if (cols >= 1) {                             
+                  cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(1, r, rows) - 1);
+                  buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                  command = mxMalloc(buflen);
+                  mxGetString(cell_element_ptr, command, buflen);
+              } 
+
+              if (cols >= 2) {
+                  cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(2, r, rows) - 1);
+                  
+                  if (0 == cell_element_ptr) {
+                      reduceCol++;
+                  } else {
+                      buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                      key = mxMalloc(buflen);
+                      mxGetString(cell_element_ptr, key, buflen);
+                      if (0 == strlen(key)) { reduceCol++; }
+                      mexPrintf("keylen %d\n", strlen(key));
+                  }
+              }
+
+              if (cols >= 3){
+                  cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(3, r, rows) - 1);
+                  if (0 == cell_element_ptr) {
+                      reduceCol++;
+                  } else {
+                      buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                      value = mxMalloc(buflen);
+                      mxGetString(cell_element_ptr, value, buflen);
+                      if (0 == strlen(value)) { reduceCol++;}
+                      mexPrintf("valuelen %d\n", strlen(value));
+                  }
+              }
+              //#ifdef DEBUG
+                    mexPrintf("pipeline: c %s k %s v %s\n", command, key, value);
+              //#endif // DEBUG
+              if ((cols - reduceCol) == 1) {
+                redisAppendCommand(c, command);
+              } else if ((cols - reduceCol) == 2) {
+                redisAppendCommand(c, "%s %s", command, key);
+              } else if ((cols - reduceCol) == 3) {
+                redisAppendCommand(c, "%s %s %s", command, key, value);
+              }
+              reduceCol = 0;
+              command = "";
+              key = "";
+              value = "";
+              
+             
           }
           
           // fire the silverbullet
-          for (n = 0; n < m; n++) {
+          for (n = 0; n < rows; n++) {
               redisGetReply(c, (void**)&reply);
               freeReplyObject(reply);
           }
@@ -215,11 +260,12 @@ void mexFunction (int nlhs, mxArray *plhs[],
           
       // SINGLE COMMAND, WHITESPACE SAFE
       } else {
-
-          int cols = mxGetN(prhs[nrhs - 1]);
           if (cols >= 1){
               
               cell_element_ptr = mxGetCell(prhs[nrhs - 1], 0);
+              #ifdef DEBUG
+                mexPrintf("command len: %d\n", mxGetN(cell_element_ptr));
+              #endif // DEBUG
               buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
               command = mxMalloc(buflen);
               mxGetString(cell_element_ptr, command, buflen);
@@ -233,6 +279,9 @@ void mexFunction (int nlhs, mxArray *plhs[],
           if (cols >= 2){
               
               cell_element_ptr = mxGetCell(prhs[nrhs - 1], 1);
+              #ifdef DEBUG
+                mexPrintf("key len: %d\n", mxGetN(cell_element_ptr));
+              #endif // DEBUG
               buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
               key = mxMalloc(buflen);
               mxGetString(cell_element_ptr, key, buflen);
@@ -246,6 +295,9 @@ void mexFunction (int nlhs, mxArray *plhs[],
           if (cols >= 3){
               
               cell_element_ptr = mxGetCell(prhs[nrhs - 1], 2);
+              #ifdef DEBUG
+                mexPrintf("value len: %d\n", mxGetN(cell_element_ptr));
+              #endif // DEBUG
               buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
               value = mxMalloc(buflen);
               mxGetString(cell_element_ptr, value, buflen);

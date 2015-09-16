@@ -11,7 +11,7 @@ if strcmp('YES', str)
 
     % build for testing
     if (exist('OCTAVE_VERSION', 'builtin') == 5)
-        mkoctfile -Wall -Wextra -v -I/usr/include/hiredis -O2 --mex redis_.c -lhiredis -std=c99 -o redis_.mex
+        mkoctfile -lhiredis -I/usr/include/hiredis --mex -fPIC -std=c99 -O2 -pedantic -g redis_.c -o redis_.mex
     else
         mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -std=c99 -O2 -pedantic -g' redis_.c -o redis_.mexa64
     end
@@ -85,8 +85,38 @@ if strcmp('YES', str)
     assert(all(r.size('m') == [3 3 3]))
     assert(all(all(r.range2array('m', [1 3], 1:3, 1) == [1 4 7; 3 6 9])))
     assert(all(all(all(r.range2array('m', [1 3], 1:3, 1:2) == cat(3,[1 4 7;3 6 9],[10 13 16;12 15 18])))))
+    %% PIPELINE TEST
+    assert(OK(r.call('SET M 0')))
+    for n = 1:642
+        r.call('INCR M');
+    end
+    assert(str2double(r.get('M')) == 642)
+    assert(OK(r.call('SET M 0')))
+    for n = 1:642
+        r = r.pipeline('INCR M');
+    end
+    r = r.execute();
+    assert(str2double(r.get('M')) == 642)
     
-    
+    assert(OK(r.call('SET M 0')))
+    for n = 1:642
+        r = r.pipeline({'INCR', 'M'});
+    end
+    r = r.execute();
+    assert(str2double(r.get('M')) == 642)
 
+    for n = 1:642
+        r = r.pipeline('SET M 5');
+    end
+    r = r.execute();
+    assert(str2double(r.get('M')) == 5)
+    
+    r = r.pipeline('SET THIS 0');
+    r = r.pipeline('INCR THIS');
+    r = r.pipeline({'INCR', 'THIS'});
+    r = r.pipeline({'SET', 'PIPELINE', 'OK'});
+    r = r.execute();
+    assert(str2double(r.get('THIS')) == 2)
+    assert(OK(r.call('GET PIPELINE')))
     fprintf('\n everything passed\n')
 end

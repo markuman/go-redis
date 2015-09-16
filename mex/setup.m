@@ -6,7 +6,7 @@ if (exist('OCTAVE_VERSION', 'builtin') == 5)
     %% setup for octave follows here
     if isunix
         try
-            mkoctfile -Wall -Wextra -v -I/usr/include/hiredis -O2 --mex redis_.c -lhiredis -std=c99 -o ../inst/redis_.mex
+            mkoctfile -lhiredis -I/usr/include/hiredis --mex -fPIC -std=c99 -O2 -pedantic -g redis_.c -o redis_.mex
         catch
             error('something went wrong\n Make sure you''ve installes octave dev tools and hiredis')
         end%try
