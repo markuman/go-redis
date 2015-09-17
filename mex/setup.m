@@ -6,7 +6,7 @@ if (exist('OCTAVE_VERSION', 'builtin') == 5)
     %% setup for octave follows here
     if isunix
         try
-            mkoctfile -Wall -Wextra -v -I/usr/include/hiredis -O2 --mex redis_.c -lhiredis -std=c99 -o ../inst/redis_.mex
+            mkoctfile -lhiredis -I/usr/include/hiredis --mex -fPIC -std=c99 -O2 -pedantic -g redis_.cpp -o redis_.mex
         catch
             error('something went wrong\n Make sure you''ve installes octave dev tools and hiredis')
         end%try
@@ -18,7 +18,7 @@ else
     %% setup for matlab follows here
     if isunix
         try
-            mex -lhiredis -I/. CFLAGS='-fPIC -std=c99 -O2 -pedantic -g' redis_.c -o ../inst/private/redis_.mexa64
+            mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -std=c99 -O2 -pedantic -g' redis_.cpp -o ../inst/private/redis_.mexa64
         catch
             error('something went wrong.\n Make sure mex is setup correctly (rerun mex -setup) and you''ve installed hiredis')
         end%try

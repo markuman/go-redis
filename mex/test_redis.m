@@ -11,22 +11,10 @@ if strcmp('YES', str)
 
     % build for testing
     if (exist('OCTAVE_VERSION', 'builtin') == 5)
-        mkoctfile -Wall -Wextra -v -I/usr/include/hiredis -O2 --mex redis_.c -lhiredis -std=c99 -o redis_.mex
+        mkoctfile -Wall -Wextra -v -I/usr/include/hiredis -O2 --mex redis_.cpp -lhiredis -std=c99 -o redis_.mex
     else
-        mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -std=c99 -O2 -pedantic -g' redis_.c -o redis_.mexa64
+        mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -std=c99 -O2 -pedantic -g' redis_.cpp -o redis_.mexa64
     end
-
-    %% testing core redis_ mex function
-    assert(strcmp('PONG',redis_('PING')))
-    assert(OK(redis_('flushall')))
-    assert(OK(redis_('SET A 1')))
-    assert(OK(redis_({'SET', 'B', 'a whitespace value'})))
-    assert(redis_('INCR A') == 2)
-    assert(redis_({'DECR', 'A'}) == 1)
-    assert(strcmp('string', redis_('TYPE A')))
-    assert(redis_('DEL A') == 1)
-    assert(iscell(redis_('keys *')))
-    assert(strcmp('a whitespace value', redis_({'GET', 'B'})))
 
     %% testing redis() class
     setup
@@ -56,13 +44,7 @@ if strcmp('YES', str)
     assert(r.exists('B space key') == 0)
     assert(r.exists('B_key') == 1)
     assert(r.move('B_key', 1) == 1)
-    assert(r.exists('B_key') == 0)
-    r.db = 1;
-    assert(r.exists('B_key') == 1)
-    assert(r.move('B_key', '0') == 1)
-    assert(r.move('B_key', '0') == 0)
-    r.db = 0;
-    assert(r.exists('B_key') == 1)
+    assert(r.exists('B_key') == 0)    
     % test append strlen and incr* decr* commands
     assert(r.append('mykey', 'O') == 1)
     assert(r.append('mykey', 'K') == 2)
@@ -85,7 +67,25 @@ if strcmp('YES', str)
     assert(all(r.size('m') == [3 3 3]))
     assert(all(all(r.range2array('m', [1 3], 1:3, 1) == [1 4 7; 3 6 9])))
     assert(all(all(all(r.range2array('m', [1 3], 1:3, 1:2) == cat(3,[1 4 7;3 6 9],[10 13 16;12 15 18])))))
+    %% PIPELINE TEST
+    assert(OK(r.call('SET M 0')))
+    for n = 1:642
+        r.call('INCR M');
+    end
+    assert(str2double(r.get('M')) == 642)
     
+    assert(OK(r.call('SET M 0')))
+    for n = 1:642
+        r = r.pipeline('INCR M');
+    end
+    r = r.execute();
+    assert(str2double(r.get('M')) == 642)
+    
+    for n = 1:642
+        r = r.pipeline('SET M 5');
+    end
+    r = r.execute();
+    assert(str2double(r.get('M')) == 5)
     
 
     fprintf('\n everything passed\n')

@@ -8,13 +8,16 @@ classdef redis < handle
     % r = redis(hostname, port, db, passwd, precision)
     % r = redis(hostname, port, db, passwd, precision, batchsize)
 
+    properties        
+        precision
+        batchsize
+    end%properties
+    
     properties (SetAccess = private, Hidden = true)
         hostname
         port
         db
         passwd
-        precision
-        batchsize
         objectHandle; % Handle to the underlying C++ redis connection class instance
     end%properties
 
