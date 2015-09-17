@@ -60,21 +60,22 @@ void mexFunction (int nlhs, mxArray *plhs[],
   //  command - send a redis command to the server
   if (!strcmp("new", instruction)) {
     // default stuff
-    hostname  = "127.0.0.1";
+    const char *hostname  = "127.0.0.1";
     port      = 6379;
     database  = 0;
-    password  = "";
-    key       = "";
-    value     = "";
+    const char *password  = "";
+    const char *key       = "";
+    const char *value     = "";
 
     // OPTIONAL: GET HOSTNAME
     if ( nrhs >= 2  ) {
       if ( mxIsChar(prhs[1]) ) {
-        hostname = (char *) mxCalloc(mxGetN(prhs[1])+1, sizeof(char));
+        char *hostname = (char *) mxCalloc(mxGetN(prhs[1])+1, sizeof(char));
         mxGetString(prhs[1], hostname, mxGetN(prhs[1])+1);
       } else {
         mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Error setting up redis connection: Hostname must be a string.");
       }
+      
     }
 
     // OPTIONAL: GET PORT
@@ -103,7 +104,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
     // OPTIONAL: GET PASSWORD
     if ( nrhs >= 5 ) {
       if ( mxIsChar(prhs[4]) ) {
-        password = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
+        char *password = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
         mxGetString(prhs[4], password, mxGetN(prhs[4])+1);
       } else {
         mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Error setting up redis connection: Password must be a string.");
