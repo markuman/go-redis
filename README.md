@@ -45,7 +45,7 @@ For more detailed information next to this `README.md`, take a look at the Wiki
 
 You can compile it directly in the Matlab commandline.
 
-    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -O2 -pedantic -g' redis_.cpp
+    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -O2 -pedantic -g' redis_.cpp -o ../inst/private/redis_.mexa64
 
 Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
@@ -53,7 +53,7 @@ Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
 From GNU Octave commandline
 
-    mkoctfile -Wall -Wextra -v -I/usr/include/hiredis --mex redis_.cpp -lhiredis
+    mkoctfile -lhiredis -I/usr/include/hiredis --mex -fPIC -O2 -pedantic -g redis_.cpp -o redis_.mex
 
 Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
@@ -75,8 +75,8 @@ e.g.
 
 * maybe add `hiredis` as a submodule to simplify the setup process?
 * improve c-code
-* still some problems with unicodes between matlab and GNU Octave
-* improve `pipeline` (subclass, whitespace-safe, etc.)
+* still some problems with unicodes between matlab and GNU Octave (it's a natural problem between octave and matlab)
+* improve `pipeline` (subclass)
 
 # limitations
 
@@ -99,9 +99,22 @@ e.g.
   	r = redis(hostname)
   	r = redis(hostname, port)
   	r = redis(hostname, port, db)
-  	r = redis(hostname, port, db, pwd)
+  	r = redis(hostname, port, db, pwd, precision, batchsize)
 
 ### properties
+
+#### public (can be change during the session)
+
+ * `precision`
+   * type double
+   * default: `4`
+   * number of decimal points stored in `array2redis()`
+ * `batchsize`
+   * type double
+   * default: `64`
+   * when number of commands in `pipeline` == `batchsize`, it automatically execute the `pipeline`.
+
+#### private (can't be change during the session)
 
  * `hostname`
    * type char
@@ -117,14 +130,6 @@ e.g.
    * type char
    * default: empty
    * auth password
- * `precision`
-   * type double
-   * default: `4`
-   * number of decimal points stored in `array2redis()`
- * `batchsize`
-   * type double
-   * default: `64`
-   * when number of commands in `pipeline` == `batchsize`, it automatically execute the `pipeline`.
 
 ## usage
 
@@ -277,6 +282,13 @@ So you just need to call `r.execute()` (Yes, it takes no arguments!) one time wh
     end
     r = r.execute();
     toc
+
+
+`command` can be a cell array too, like `r = r.pipeline({'INCR', 'A'}); r = r.pipeline({'INCR', 'A'});`.  
+But currently for GNU Octave the number of columns have to be the same for the pipeline session!  
+
+    r = pipeline({'SET', 'A', '0'});
+    r = pipeline({'INCR', 'A'}); % with matlab it's fine, with Octave currently not
 
 
 But you can pass a cell array of arguments too, to bypass the class functionality and its magic pipe execution.
