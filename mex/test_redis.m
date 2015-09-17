@@ -87,6 +87,33 @@ if strcmp('YES', str)
     r = r.execute();
     assert(str2double(r.get('M')) == 5)
     
+    assert(OK(r.call('SET M 0')))
+    for n = 1:642
+        r = r.pipeline({'INCR', 'M'});
+    end
+    r = r.execute();
+    assert(str2double(r.get('M')) == 642)
+    
+    if (exist('OCTAVE_VERSION', 'builtin') == 5)
+        r = r.pipeline({'SET', 'KEYNAME', 'WHITE SPACE'});
+        r = r.pipeline({'SET', 'test1', 5});
+        r = r.execute();
+        assert(strcmp('WHITE SPACE', r.get('KEYNAME')))
+    else
+        r = r.pipeline({'SET', 'KEYNAME', 'WHITE SPACE'});
+        r = r.pipeline({'SET', 'test1', 5});
+        r = r.execute();
+        %% different numbers of cell arguments currently went wrong in octave       
+        assert(strcmp('WHITE SPACE', r.get('KEYNAME')))
+        r = r.pipeline('SET THIS 0');
+        r = r.pipeline('INCR THIS');
+        r = r.pipeline({'INCR', 'THIS'});
+        r = r.pipeline({'SET', 'PIPELINE', 'OK'});
+        r = r.execute();
+        assert(str2double(r.get('THIS')) == 2)
+        assert(OK(r.call('GET PIPELINE')))
+    end
+    
 
     fprintf('\n everything passed\n')
 end
