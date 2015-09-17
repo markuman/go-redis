@@ -41,6 +41,18 @@ For more detailed information next to this `README.md`, take a look at the Wiki
         >> setup
         >> % go where ever you want and just do "addpath ('go-redis/inst')"
 
+5. optional - run tests
+
+The `mex` folder contains a `test_redis.m` script with many `assert()` checks.
+
+        >> test_redis
+        This test will delete all databases of your redis instance on 127.0.0.1 6379.
+        To continue type "YES": YES
+        
+            everything passed
+        >> 
+
+
 ### Manually Matlab Instruction
 
 You can compile it directly in the Matlab commandline.
