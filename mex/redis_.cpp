@@ -22,10 +22,14 @@
 // Matlab/GNU Octave specific includes
 #include <mex.h>
 
+// The C++ class handle allowing us to reuse opened redis connections
+#include "class_handle.hpp"
+
 //#define DEBUG
 
 // declarate some stuff
 char* redisReturn;
+char instruction[64];
 char *hostname, *command, *password, *key, *value;
 int port, database;
 char redisChar[19]; // afaik long enough for long long int
@@ -36,71 +40,75 @@ void mexFunction (int nlhs, mxArray *plhs[],
                   int nrhs, const mxArray *prhs[])
 {
   // --- input checks
-  // currently we need at least more than one input and one ouput!!
+  // currently we need at least more than two inputs and one ouput!!
   // improve me!!
   if(nrhs < 1 && nlhs != 1) {
     mexErrMsgIdAndTxt( "MATLAB:redis_:invalidNumInputs",
                       "One or more inputs are required.");
   }
 
-  // default stuff
-  hostname  = "127.0.0.1";
-  port      = 6379;
-  database  = 0;
-  password  = "";
-  key       = "";
-  value     = "";
+  // first input is an instruction string telling us what to do
+  if (nrhs < 1 || mxGetString(prhs[0], instruction, sizeof(instruction)))
+    mexErrMsgTxt("First input should be an instruction string less than 64 characters long.");
 
-  // OPTIONAL: GET HOSTNAME
-  if ( nrhs >= 2  ) {
-    if ( mxIsChar(prhs[0]) ) {
-      hostname = (char *) mxCalloc(mxGetN(prhs[0])+1, sizeof(char));
-      mxGetString(prhs[0], hostname, mxGetN(prhs[0])+1);
-    } else {
-      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string.");
+  // Valid instructions are
+  //  new     - create a new redis connection
+  //  delete  - delete the current connection
+  //  command - send a redis command to the server
+  if (!strcmp("new", instruction)) {
+    // default stuff
+    hostname  = "127.0.0.1";
+    port      = 6379;
+    database  = 0;
+    password  = "";
+    key       = "";
+    value     = "";
+
+    // OPTIONAL: GET HOSTNAME
+    if ( nrhs >= 2  ) {
+      if ( mxIsChar(prhs[1]) ) {
+        hostname = (char *) mxCalloc(mxGetN(prhs[1])+1, sizeof(char));
+        mxGetString(prhs[1], hostname, mxGetN(prhs[1])+1);
+      } else {
+        mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Error setting up redis connection: Hostname must be a string.");
+      }
     }
-  }
 
-  // OPTIONAL: GET PORT
-  if ( nrhs >= 3 ) {
-    // GET PORT
-    if ( mxIsDouble(prhs[1]) ) {
-        // convert double to integer :: PORT
-        double* data = mxGetPr(prhs[1]);
-        port = (int)floor(data[0]);
-    } else {
-      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string and Port must be double.");
+    // OPTIONAL: GET PORT
+    if ( nrhs >= 3 ) {
+      // GET PORT
+      if ( mxIsDouble(prhs[2]) ) {
+          // convert double to integer :: PORT
+          double* data = mxGetPr(prhs[2]);
+          port = (int)floor(data[0]);
+      } else {
+        mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Error setting up redis connection: Port must be a double.");
+      }
     }
-  }
 
-  // OPTIONAL: GET DATABASE NR
-  if ( nrhs >= 4 ) {
-    if ( mxIsDouble(prhs[2]) ) {
-      // convert double to integer :: DATABASE NUMBER
-      double* databasedata = mxGetPr(prhs[2]);
-      database = (int)floor(databasedata[0]);
-    } else {
-      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string and Port and database must be double.");
+    // OPTIONAL: GET DATABASE NR
+    if ( nrhs >= 4 ) {
+      if ( mxIsDouble(prhs[3]) ) {
+        // convert double to integer :: DATABASE NUMBER
+        double* databasedata = mxGetPr(prhs[3]);
+        database = (int)floor(databasedata[0]);
+      } else {
+        mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Error setting up redis connection: Database must be double.");
+      }
     }
-  }
 
-  // OPTIONAL: GET PASSWORD
-  if ( nrhs >= 5 ) {
-    if ( mxIsChar(prhs[3]) ) {
-      password = (char *) mxCalloc(mxGetN(prhs[3])+1, sizeof(char));
-      mxGetString(prhs[3], password, mxGetN(prhs[3])+1);
-    } else {
-      mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command and Hostname Input must be a string and Port and database must be double.");
+    // OPTIONAL: GET PASSWORD
+    if ( nrhs >= 5 ) {
+      if ( mxIsChar(prhs[4]) ) {
+        password = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
+        mxGetString(prhs[4], password, mxGetN(prhs[4])+1);
+      } else {
+        mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Error setting up redis connection: Password must be a string.");
+      }
     }
-  }
 
-  // GET COMMAND & EXECUTE
-  if ( nrhs >= 1) {
-
-
-    // hiredis declaration
+    // MAKE THE REDIS CONNECTION
     redisContext *c;
-    redisReply *reply;
 
     // 0) MAKE CONNECTION
     struct timeval timeout = { 1, 500000 }; // 1.5 seconds
@@ -117,21 +125,56 @@ void mexFunction (int nlhs, mxArray *plhs[],
 
     // 1) OPTIONAL AUTH
     if (strlen(password) > 0){
-      reply= redisCommand(c, "AUTH %s", password);
+      redisReply *reply;
+      reply = (redisReply*)redisCommand(c, "AUTH %s", password);
       if (reply->type == REDIS_REPLY_ERROR) {
         /* Authentication failed */
         mexErrMsgIdAndTxt("MATLAB:redis_:AuthenticationFailed", "Authentication failed.");
       }
+      freeReplyObject(reply);
     }
 
     // 2) OPTIONAL CHANGE DATABASE NR
     if (database != 0) {
-      reply = redisCommand(c, "SELECT %d", database);
+      redisReply *reply;
+      reply = (redisReply*)redisCommand(c, "SELECT %d", database);
       if (reply->type == REDIS_REPLY_ERROR) {
         /* Select database failed */
         mexErrMsgIdAndTxt("MATLAB:redis_:SelectFailed", "Select Database %d failed.", database);
       }
+      freeReplyObject(reply);
     }
+
+    // 3) STORE THE CONNECTION & RETURN IT
+    plhs[0] = convertPtr2Mat<redisContext>(c);
+    return;
+
+  } else if (!strcmp("delete", instruction)) {
+
+    if ( nrhs < 2 ) {
+      mexErrMsgTxt("No redis connection supplied after delete instruction (expecting the handle)");
+    }
+
+    // Destroy the C++ object
+    redisContext *c = convertMat2Ptr<redisContext>(prhs[1]);
+    redisFree(c);
+    destroyObject<redisContext>(prhs[1]);
+    // Warn if other commands were ignored
+    if (nlhs != 0 || nrhs != 2)
+      mexWarnMsgTxt("Delete: Unexpected arguments ignored.");
+    return;
+
+  } else if (!strcmp("command", instruction)) {
+
+    if ( nrhs < 2 ) {
+      mexErrMsgTxt("No redis connection supplied (expecting the handle)");
+    } else if ( nrhs < 3 ) {
+      mexErrMsgTxt("No redis command supplied");
+    }
+
+    // Get the class instance pointer from the second input
+    redisContext *c = convertMat2Ptr<redisContext>(prhs[1]);
+    redisReply *reply;
 
     // --- SINGLE COMMAND OR PIPELINE ---
     // 3) SINGLE COMMAND
@@ -139,9 +182,9 @@ void mexFunction (int nlhs, mxArray *plhs[],
       command = (char *) mxCalloc(mxGetN(prhs[nrhs - 1])+1, sizeof(char));
       mxGetString(prhs[nrhs - 1], command, mxGetN(prhs[nrhs - 1])+1);
       // call redis
-      reply = redisCommand(c, command);
-      
- 
+      reply = (redisReply*)redisCommand(c, command);
+
+
 
       // check the output
       if (reply->type == REDIS_REPLY_STRING) {
@@ -159,15 +202,13 @@ void mexFunction (int nlhs, mxArray *plhs[],
 
         // free hiredis
         freeReplyObject(reply);
-        redisFree(c);
         plhs[0] = cell_array_ptr;
 
       } else if (reply->type == REDIS_REPLY_INTEGER) {
         plhs[0] = mxCreateDoubleScalar(reply->integer);
-        
+
         // free redis
         freeReplyObject(reply);
-        redisFree(c);
       } else {
         // Laugh in the face of danger
         plhs[0] = mxCreateString(reply->str);
@@ -182,90 +223,88 @@ void mexFunction (int nlhs, mxArray *plhs[],
       char* c_array;
       mwIndex n;
       mwSize m, buflen;
-      m = mxGetNumberOfElements(prhs[nrhs - 1]);      
+      m = mxGetNumberOfElements(prhs[nrhs - 1]);
       #ifdef DEBUG
         mexPrintf("%d cols\n", mxGetN(prhs[nrhs - 1]));
         mexPrintf("%d rows\n", mxGetM(prhs[nrhs - 1]));
         mexPrintf("%d elements\n", m);
       #endif
       int rows = mxGetM(prhs[nrhs - 1]);
-      
+
       // PIPELINE
       if (rows > 1){
           // load the silverbullet
           for (n = 0; n < m; n++){
               cell_element_ptr = mxGetCell(prhs[nrhs - 1],n);
               buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-              c_array = mxMalloc(buflen);
+              c_array = (char *)mxMalloc(buflen);
               mxGetString(cell_element_ptr, c_array, buflen);
               redisAppendCommand(c, c_array);
               #ifdef DEBUG
                 mexPrintf("pipeline command: %s\n", c_array);
               #endif // DEBUG
           }
-          
+
           // fire the silverbullet
           for (n = 0; n < m; n++) {
               redisGetReply(c, (void**)&reply);
               freeReplyObject(reply);
           }
           plhs[0] = mxCreateString("OK");
-          
-          redisFree(c);
-          
+
       // SINGLE COMMAND, WHITESPACE SAFE
       } else {
 
           int cols = mxGetN(prhs[nrhs - 1]);
           if (cols >= 1){
-              
+
               cell_element_ptr = mxGetCell(prhs[nrhs - 1], 0);
               buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-              command = mxMalloc(buflen);
+              command = (char *)mxMalloc(buflen);
               mxGetString(cell_element_ptr, command, buflen);
-              
+
               #ifdef DEBUG
                 mexPrintf("command: %s\n", command);
               #endif // DEBUG
-              
-          } 
-          
+
+          }
+
           if (cols >= 2){
-              
+
               cell_element_ptr = mxGetCell(prhs[nrhs - 1], 1);
               buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-              key = mxMalloc(buflen);
+              key = (char *)mxMalloc(buflen);
               mxGetString(cell_element_ptr, key, buflen);
-              
+
               #ifdef DEBUG
                 mexPrintf("key: %s\n", key);
               #endif // DEBUG
-              
-          } 
-          
+
+          }
+
           if (cols >= 3){
-              
+
               cell_element_ptr = mxGetCell(prhs[nrhs - 1], 2);
               buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-              value = mxMalloc(buflen);
+              value = (char *)mxMalloc(buflen);
               mxGetString(cell_element_ptr, value, buflen);
-              
+
               #ifdef DEBUG
                 mexPrintf("value: %s\n", value);
               #endif // DEBUG
-              
+
           }
-          
+
           #ifdef DEBUG
                 mexPrintf("%s %s %s\n", command, key, value);
           #endif // DEBUG
           // call redis
           if (cols == 1) {
-            reply = redisCommand(c, command);
+            reply = (redisReply*)redisCommand(c, command);
           } else if (cols == 2) {
-            reply = redisCommand(c, "%s %s", command, key);
+            reply = (redisReply*)redisCommand(c, "%s %s", command, key);
           } else if (cols == 3) {
-            reply = redisCommand(c, "%s %s %s", command, key, value);
+            reply = (redisReply*)redisCommand(c, "%s %s %s", command, key, value);
           }
 
 
@@ -286,7 +325,6 @@ void mexFunction (int nlhs, mxArray *plhs[],
 
             // free hiredis
             freeReplyObject(reply);
-            redisFree(c);
             plhs[0] = cell_array_ptr;
 
           } else if (reply->type == REDIS_REPLY_INTEGER) {
@@ -294,18 +332,20 @@ void mexFunction (int nlhs, mxArray *plhs[],
 
             // free redis
             freeReplyObject(reply);
-            redisFree(c);
           } else {
             // Laugh in the face of danger
             plhs[0] = mxCreateString(reply->str);
           }
-          
-            
+
+
       }
 
     } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command Input must be a string.");
     }
+
+  } else {
+    mexErrMsgTxt("Unknown redis instruction expecting one of (new, delete, command)");
   }
 
 }
