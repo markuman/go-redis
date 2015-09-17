@@ -6,15 +6,7 @@
 str = input('This test will delete all databases of your redis instance on 127.0.0.1 6379.\n To continue type "YES": ','s');
 if strcmp('YES', str)
 
-
     OK = @(x) strcmp('OK', x);
-
-    % build for testing
-    if (exist('OCTAVE_VERSION', 'builtin') == 5)
-        mkoctfile -Wall -Wextra -v -I/usr/include/hiredis -O2 --mex redis_.cpp -lhiredis -std=c99 -o redis_.mex
-    else
-        mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -std=c99 -O2 -pedantic -g' redis_.cpp -o redis_.mexa64
-    end
 
     %% testing redis() class
     setup
