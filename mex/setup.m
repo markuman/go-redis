@@ -18,7 +18,7 @@ else
     %% setup for matlab follows here
     if isunix
         try
-            mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -std=c99 -O2 -pedantic -g' redis_.c -o ../inst/private/redis_.mexa64
+            mex -lhiredis -I/. CFLAGS='-fPIC -std=c99 -O2 -pedantic -g' redis_.c -o ../inst/private/redis_.mexa64
         catch
             error('something went wrong.\n Make sure mex is setup correctly (rerun mex -setup) and you''ve installed hiredis')
         end%try

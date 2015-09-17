@@ -1,4 +1,4 @@
-classdef redis
+classdef redis < handle
     %redis mex client for Matlab and GNU Octave
     % r = redis()
     % r = redis(hostname)
@@ -8,13 +8,14 @@ classdef redis
     % r = redis(hostname, port, db, passwd, precision)
     % r = redis(hostname, port, db, passwd, precision, batchsize)
 
-    properties
+    properties (SetAccess = private, Hidden = true)
         hostname
         port
         db
         passwd
         precision
         batchsize
+        objectHandle; % Handle to the underlying C++ redis connection class instance
     end%properties
 
     properties (Access = protected)
@@ -26,7 +27,7 @@ classdef redis
 
     methods
 
-        %% classdef input validation
+        %% constructor - construct a new connection to the redis server
         function self = redis(varargin)
             self.port            = 6379;
             self.hostname        = '127.0.0.1';
@@ -56,8 +57,15 @@ classdef redis
             if nargin >= 6
                 self.batchsize   = varargin{6};
             end
+            % create a new connection to the redis server
+            self.objectHandle = redis_('new', self.hostname, self.port, self.db, self.passwd);
 
         end%obj redis
+
+        %% destructor - destroy the C++ redis connection class instance
+        function delete(self)
+            ret = redis_('delete', self.objectHandle);
+        end
 
         %% redis call command
         % for debugging and not directly supported redis functions
@@ -67,7 +75,7 @@ classdef redis
             % when the command it a cell, separated in command, key, value,
             % than everything is whitespace-safe
 
-            ret = redis_(self.hostname, self.port, self.db, self.passwd, command);
+            ret = redis_('command',self.objectHandle, command);
 
         end%call
 
@@ -86,7 +94,7 @@ classdef redis
             end
 
         end%set
-        
+
         function ret = getset(self, key, value)
             if ischar(key)
                 if isnumeric(value)
@@ -100,7 +108,7 @@ classdef redis
                 error('key must be a char')
             end
         end%set
-        
+
         function ret = append(self, key, value)
             if ischar(key)
                 if ischar(value)
@@ -126,23 +134,23 @@ classdef redis
         function ret = incr(self, key)
             ret = self.call({'INCR', key});
         end%incr
-        
+
         function ret = incrby(self, key, value)
             ret = self.call({'INCRBY', key, num2str(value)});
         end%incrby
-        
+
         function ret = incrbyfloat(self, key, value)
             ret = self.call({'INCRBYFLOAT', key, num2str(value)});
         end%incrbyfloat
-        
+
         function ret = decr(self, key)
             ret = self.call({'DECR', key});
         end%decr
-        
+
         function ret = decrby(self, key, value)
             ret = self.call({'DECRBY', key, num2str(value)});
         end%decrby
-        
+
         function ret = strlen(self, key)
             ret = self.call({'STRLEN', key});
         end%strlen
@@ -150,7 +158,7 @@ classdef redis
         function ret = ping(self)
             ret = self.call('PING');
         end%ping
-        
+
         function ret = save(self)
             ret = self.call('SAVE');
         end%save
@@ -158,7 +166,7 @@ classdef redis
         function ret = del(self, varargin)
             ret = self.call({'DEL', varargin{:}});
         end%del
-        
+
         function ret = rename(self, oldkeyname, newkeyname)
             if ischar(oldkeyname) && ischar(newkeyname)
                 ret = self.call({'RENAME', oldkeyname, newkeyname});
@@ -166,7 +174,7 @@ classdef redis
                 error('keynames have to be chars')
             end
         end%rename
-        
+
         function ret = move(self, keyname, db)
             if ischar(keyname)
                 ret = self.call({'MOVE', keyname, num2str(db)});
@@ -239,7 +247,7 @@ classdef redis
 
             if isnumeric(array)
 
-                if (1 == self.exists(varname)) 
+                if (1 == self.exists(varname))
                     self.del(varname);
                     self.del([varname '.values']);
                     self.del([varname '.dimension']);
@@ -281,7 +289,7 @@ classdef redis
             end%if char
 
         end%function redis2array
-        
+
         function ret = numel(self, keyname)
             % determine number of elements in an Octave/Matlab array
             dimensionVar    = self.exists([keyname '.dimension']);
@@ -293,7 +301,7 @@ classdef redis
                 ret = NaN;
             end
         end%numel
-        
+
         function ret = size(self, keyname)
             % determine size of an Octave/Matlab array
             dimensionVar    = self.exists([keyname '.dimension']);
@@ -305,9 +313,9 @@ classdef redis
                 ret = NaN;
             end
         end%size
-        
+
         function ret = range2array(self, keyname, varargin)
-            
+
             dimensionVar    = self.exists([keyname '.dimension']);
             if (dimensionVar)
                 origin_dimension   = self.call(sprintf('LRANGE %s.dimension 0 -1', keyname));
@@ -315,7 +323,7 @@ classdef redis
                 % only 2D and 3D arrays are supported!!!
                 if numel(varargin) == 2
                     % build linear indizes of origin array stored in redis
-                    [x, y]          = meshgrid(varargin{1}, varargin{2});                   
+                    [x, y]          = meshgrid(varargin{1}, varargin{2});
                     origin_pairs    = [x(:) y(:)];
                     origin_linInd   = sub2ind(str2double(origin_dimension), origin_pairs(:,1), origin_pairs(:,2));
                     % build dimension of reguested range
@@ -334,23 +342,23 @@ classdef redis
                 else
                     error('error')
                 end
-                
+
                 tmp    = zeros(numel(origin_linInd),1);
-                % matlab/octave index starts by 1, redis index starts by 0.                
+                % matlab/octave index starts by 1, redis index starts by 0.
                 % maybe this can be improved. sort origin_linInd and read
                 % indices in blocks with lrange
                 for n = 1:numel(origin_linInd)
                     tmp(n) = str2double(self.call({'LINDEX', [keyname '.values'], num2str(origin_linInd(n) - 1)}));
                 end%for
-                
+
                 if numel(dimension) == 2
-                    % lol            
-%                     ret = reshape(tmp, flip(dimension))'; 
+                    % lol
+%                     ret = reshape(tmp, flip(dimension))';
                     ret = NaN(max(pairs));
                     ret(linInd) = tmp;
                     ret(isnan(ret)) = [];
                     ret = reshape(ret, dimension);
-                    
+
                 else
                     ret = NaN(max(pairs));
                     ret(linInd) = tmp;
@@ -366,7 +374,7 @@ classdef redis
             retVar = self.call(sprintf('EVALSHA %s 2 %s %s', self.gaussian_hash, a, b));
             ret = self.redis2array(retVar);
         end
-        
+
         function ret = rand(self, key, varargin)
             dimension = cell2mat(varargin);
             n         = prod(dimension);
@@ -382,7 +390,7 @@ classdef redis
             assert(self.call(sprintf('SADD %s %s.values %s.dimension', key, key, key)) == 2, 'failed to group dimension list and values list');
             ret = true;
         end%rand
-        
+
         function ret = ones(self, key, varargin)
             dimension = cell2mat(varargin);
             n         = prod(dimension);
@@ -398,7 +406,7 @@ classdef redis
             assert(self.call(sprintf('SADD %s %s.values %s.dimension', key, key, key)) == 2, 'failed to group dimension list and values list');
             ret = true;
         end%ones
-        
+
         function ret = zeros(self, key, varargin)
             dimension = cell2mat(varargin);
             n         = prod(dimension);
@@ -425,7 +433,7 @@ classdef redis
                 error('failed to load file private/gaussian.lua')
             end%if
         end%function
-        
+
         function self = loadcreateArrays(self, file)
             fid = fopen(file,'r');
             if fid >= 3

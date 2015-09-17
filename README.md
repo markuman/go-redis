@@ -16,7 +16,7 @@ For more detailed information next to this `README.md`, take a look at the Wiki
 # Requirements
 
 * Classdef support
-  * Octave >= 4.0 
+  * Octave >= 4.0
   * Matlab >= R2012b? _(dunno when classdef was introduced...)_
 * C-Compiler
 * [hiredis library](https://github.com/redis/hiredis/)
@@ -37,15 +37,15 @@ For more detailed information next to this `README.md`, take a look at the Wiki
   * Distributed with your Matlab or GNU Octave installation
 4. clone/download and build go-redis directly from Matlab/GNU Octave
 
-        >> cd go-redis/mex  
-        >> setup  
-        >> % go where ever you want and just do "addpath ('go-redis/inst')"  
+        >> cd go-redis/mex
+        >> setup
+        >> % go where ever you want and just do "addpath ('go-redis/inst')"
 
 ### Manually Matlab Instruction
 
 You can compile it directly in the Matlab commandline.
 
-    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -std=c99 -O2 -pedantic -g' redis_.c
+    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-Wall -Wextra -fPIC -O2 -pedantic -g' redis_.cpp
 
 Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
@@ -53,7 +53,7 @@ Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
 From GNU Octave commandline
 
-    mkoctfile -Wall -Wextra -v -I/usr/include/hiredis --mex redis_.c -lhiredis -std=c99
+    mkoctfile -Wall -Wextra -v -I/usr/include/hiredis --mex redis_.cpp -lhiredis
 
 Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
@@ -64,11 +64,11 @@ https://savannah.gnu.org/bugs/?41723
 
 You can compile it in bash too
 
-    gcc -fPIC -I <PATH TO mex.h> -lm -I <PATH TO hiredis.h> -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
+    gcc -fPIC -I <PATH TO mex.h> -lm -I <PATH TO hiredis.h> -lhiredis -shared -O2 redis_.cpp -o redis_.mex
 
-e.g. 
+e.g.
 
-    gcc -fPIC -I /usr/include/octave-4.0.0/octave/ -lm -I /usr/include/hiredis/ -lhiredis -std=c99 -shared -O2 redis_.c -o redis_.mex
+    gcc -fPIC -I /usr/include/octave-4.0.0/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared -O2 redis_.cpp -o redis_.mex
 
 
 # todo
@@ -150,10 +150,10 @@ e.g.
         PONG
 
 ### SET, GET, GETSET, APPEND
-`r.set(key, value)`  
-`r.get(key)`  
-`r.getset(key, value)`  
-`r.append(key, value)`  
+`r.set(key, value)`
+`r.get(key)`
+`r.getset(key, value)`
+`r.append(key, value)`
 
  * value can be a double or a char (expect `append` there it has to be a char)
  * doubles will be converted to char
@@ -167,7 +167,7 @@ e.g.
   * return type of `GET*` commands will be a char or a double _(depends on the reply of hiredis)_
 
 ### INCR, DECR
-`r.incr(key)`  
+`r.incr(key)`
 `r.decr(key)`
 
 * return type will be double.
@@ -193,12 +193,12 @@ e.g.
 `r.del(key, dbnr)`
 
 * return will be true (1) or false (0)
-* `dbnr` can be a char `'1'` or a double `1`. 
+* `dbnr` can be a char `'1'` or a double `1`.
 
 ### RENAME
 `r.rename(oldkeyname, newkeyname)`
 
-* return will be `OK` or `ERR: ...` 
+* return will be `OK` or `ERR: ...`
 * keynames have to be chars
 
 ### SAVE
@@ -230,14 +230,17 @@ An array reply will be transformed into a cell array in Octave/Matlab.
 ### CALL
 `r.call(command)`
 
-* for debugging 
+* for debugging
 * functions that are not directly supported by redis() class
 * for disable the overhead of redis() class functions
 * command can be a string or a cell (e.g. `{'SET', 'my keyname', 'this is a value'}`)
 
+### close the connection
+    >> r.delete()
+
 ### PIPELINE
-`r.pipeline(command)` 
-`r.execute()` 
+`r.pipeline(command)`
+`r.execute()`
 
 Using `r.pipeline` will speedup your writing commands 2-3x.
 
@@ -254,20 +257,20 @@ So you just need to call `r.execute()` (Yes, it takes no arguments!) one time wh
         r.call('INCR M');
     end
     toc
-    
+
     tic
     for n = 1:5000
         r = r.pipeline('INCR M');
     end
     r = r.execute();
     toc
-    
+
     tic
     for n = 1:5000
         r.call('SET M 5');
     end
     toc
-    
+
     tic
     for n = 1:5000
         r = r.pipeline('SET M 5');
@@ -279,6 +282,7 @@ So you just need to call `r.execute()` (Yes, it takes no arguments!) one time wh
 But you can pass a cell array of arguments too, to bypass the class functionality and its magic pipe execution.
 
     r.call({'SET A 0'; 'INCR A'; 'INCR A'})
+
 
 ### GNU OCtave and Matlab special
 
@@ -305,8 +309,8 @@ For reading a multidimension numeric array from redis back into workspace
             0.1270    0.0975    0.9575
 
 #### range2array
-`r.range2array(name, x, y, z)`  
-For reading just a range of an array which is stored in redis.  
+`r.range2array(name, x, y, z)`
+For reading just a range of an array which is stored in redis.
 
 * it only support 2D and 3D numerical arrays
 
