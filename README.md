@@ -57,7 +57,7 @@ The `mex` folder contains a `test_redis.m` script with many `assert()` checks.
 
 You can compile it directly in the Matlab commandline.
 
-    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -O2 -pedantic -g' redis_.cpp -o ../inst/private/redis_.mexa64
+    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -O2 -pedantic -std=c++11 -g' redis_.cpp -o ../inst/private/redis_.mexa64
 
 Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
@@ -65,7 +65,7 @@ Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
 From GNU Octave commandline
 
-    mkoctfile -lhiredis -I/usr/include/hiredis --mex -fPIC -O2 -pedantic -g redis_.cpp -o redis_.mex
+    mkoctfile -lhiredis -I/usr/include/hiredis --mex -fPIC -O2 -pedantic -std=c++11 -g redis_.cpp -o redis_.mex
 
 Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
@@ -80,7 +80,7 @@ You can compile it in bash too
 
 e.g.
 
-    gcc -fPIC -I /usr/include/octave-4.0.0/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared -O2 redis_.cpp -o redis_.mex
+    gcc -fPIC -std=c++11 -I /usr/include/octave-4.0.0/octave/ -lm -I /usr/include/hiredis/ -lhiredis -shared -O2 -pedantic redis_.cpp -o redis_.mex
 
 
 # todo
