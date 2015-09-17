@@ -64,7 +64,7 @@ classdef redis < handle
 
         %% destructor - destroy the C++ redis connection class instance
         function delete(self)
-            ret = redis_('delete', self.objectHandle);
+            redis_('delete', self.objectHandle);
         end
 
         %% redis call command
