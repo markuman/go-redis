@@ -212,6 +212,13 @@ e.g.
 * return will be true (1) or false (0)
 * `dbnr` can be a char `'1'` or a double `1`.
 
+### db
+`r.db(newdbnr)`
+
+* changing to another database number
+
+    >> r = r.db(1);
+
 ### RENAME
 `r.rename(oldkeyname, newkeyname)`
 
