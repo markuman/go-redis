@@ -26,6 +26,8 @@ classdef redis < handle
        count
        gaussian_hash
        array_hash
+       is_cluster
+       is_octave
     end
 
     methods
@@ -42,6 +44,8 @@ classdef redis < handle
             self.count           = 0;
             self.gaussian_hash   = 'd27dd80c5140dc267180c03888ba933f8fa0324b';
             self.array_hash      = '91f730fc8f3613bd11019977f72ddd205b6d5f85';
+            self.is_cluster      = false;
+            self.is_octave       = true;
             if nargin >= 1
                 self.hostname    = varargin{1};
             end
@@ -63,6 +67,17 @@ classdef redis < handle
             % create a new connection to the redis server
             self.objectHandle = redis_('new', self.hostname, self.port, self.dbnr, self.passwd);
 
+            tmp = self.call('CLUSTER INFO');
+            if ~isempty(strfind(tmp, 'cluster_'))
+                self.is_cluster = true;
+            end
+            
+            if (exist('OCTAVE_VERSION', 'builtin') == 5) 
+                self.is_octave = true;
+            else
+                self.is_octave = false;
+            end%if
+            
         end%obj redis
 
         %% destructor - destroy the C++ redis connection class instance
@@ -76,6 +91,12 @@ classdef redis < handle
                 self.objectHandle = redis_('new', self.hostname, self.port, self.dbnr, self.passwd);
             end
         end % changeDB
+        
+        function newobjectHandle = move2cluster(self, newhost, newport)
+            self.port           = newport;
+            self.hostname       = newhost;
+            newobjectHandle     = redis_('new', self.hostname, self.port, self.dbnr, self.passwd);            
+        end % changeDB
 
         %% redis call command
         % for debugging and not directly supported redis functions
@@ -85,7 +106,23 @@ classdef redis < handle
             % when the command it a cell, separated in command, key, value,
             % than everything is whitespace-safe
 
-            ret = redis_('command',self.objectHandle, command);
+            ret = redis_('command', self.objectHandle, command);
+            
+            if self.is_cluster
+                if ~isempty(strfind(ret, 'MOVE'))
+                    newport = regexp(ret, ':(\d+)', 'tokens');
+                    newhost = regexp(ret, '.*? \d+ (.*?):', 'tokens');
+                    if (self.is_octave)
+                        port = str2double (cell2mat (newport));
+                        host = cell2mat (cell2mat( newhost));
+                    else
+                        port = str2double (newport{1});
+                        host = cell2mat (newhost{1});
+                    end
+                    self.objectHandle = self.move2cluster(host, port);
+                    ret = self.call(command);
+                end                
+            end
 
         end%call
 
@@ -248,7 +285,7 @@ classdef redis < handle
         % save array in redis
         function ret = array2redis(self, array, name)
 
-            if (exist('OCTAVE_VERSION', 'builtin') == 5) && (nargin == 2)
+            if self.is_octave && (nargin == 2)
                error('Currently you have to name you array using array2redis in Octave')
             end%if
 
