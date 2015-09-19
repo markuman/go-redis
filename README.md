@@ -57,7 +57,7 @@ The `mex` folder contains a `test_redis.m` script with many `assert()` checks.
 
 You can compile it directly in the Matlab commandline.
 
-    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -O2 -pedantic -std=c++11 -g' redis_.cpp -o ../inst/private/redis_.mexa64
+    mex -lhiredis -I/usr/include/hiredis/ CFLAGS='-fPIC -O2 -pedantic -std=c++11 -g' redis_.cpp 
 
 Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
@@ -65,7 +65,7 @@ Afterwards mv `redis_.mex*` from `mex` folder into `inst/private` folder.
 
 From GNU Octave commandline
 
-    mkoctfile -lhiredis -I/usr/include/hiredis --mex -fPIC -O2 -pedantic -std=c++11 -g redis_.cpp -o redis_.mex
+    mkoctfile -lhiredis -I/usr/include/hiredis --mex -fPIC -O2 -pedantic -std=c++11 -g redis_.cpp
 
 Afterwards mv `redis_.mex` from `mex` folder into `inst/private` folder.
 
@@ -107,11 +107,13 @@ e.g.
 
 	>> help redis
 	 redis mex client for Matlab and GNU Octave
-  	r = redis()
-  	r = redis(hostname)
-  	r = redis(hostname, port)
-  	r = redis(hostname, port, db)
-  	r = redis(hostname, port, db, pwd, precision, batchsize)
+	r = redis()
+	r = redis(hostname)
+	r = redis(hostname, port)
+	r = redis(hostname, port, db)
+	r = redis(hostname, port, db, pwd)
+	r = redis(hostname, port, db, pwd, precision)
+	r = redis(hostname, port, db, pwd, precision, batchsize)
 
 ### properties
 
@@ -125,6 +127,10 @@ e.g.
    * type double
    * default: `64`
    * when number of commands in `pipeline` == `batchsize`, it automatically execute the `pipeline`.
+ * `verboseCluster`
+   * boolean
+   * default: false
+   * prints information when changing the instance in a cluster like `MOVED 6373 127.0.0.1:30002`
 
 #### private (can't be change during the session)
 
@@ -217,7 +223,7 @@ e.g.
 
 * changing to another database number
 
-    >> r = r.db(1);
+        >> r = r.db(1);
 
 ### RENAME
 `r.rename(oldkeyname, newkeyname)`
@@ -261,6 +267,49 @@ An array reply will be transformed into a cell array in Octave/Matlab.
 
 ### close the connection
     >> r.delete()
+
+### CLUSTER 
+
+`go-redis` support the redis-cluster automatically
+
+        >> r = redis('127.0.0.1', 30001)
+        
+        r = 
+        
+          redis with properties:
+        
+                 precision: 4
+                 batchsize: 64
+            verboseCluster: 1
+        
+        >> r.get('Z')
+        MOVED 15295 127.0.0.1:30003
+        
+        ans =
+        
+        5
+        
+        >> r.get('A')
+        MOVED 6373 127.0.0.1:30002
+        
+        ans =
+        
+        4
+        
+        >> r.verboseCluster = false;
+        >> r.set('Z', 7)
+        
+        ans =
+        
+        OK
+        
+        >> r.get('Z')
+        
+        ans =
+        
+        7
+
+
 
 ### PIPELINE
 `r.pipeline(command)`
