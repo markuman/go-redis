@@ -36,7 +36,10 @@ if strcmp('YES', str)
     assert(r.exists('B space key') == 0)
     assert(r.exists('B_key') == 1)
     assert(r.move('B_key', 1) == 1)
-    assert(r.exists('B_key') == 0)    
+    assert(r.exists('B_key') == 0)  
+    r = r.changeDB(1);
+    assert(r.exists('B_key') == 1)
+    r = r.changeDB(0);
     % test append strlen and incr* decr* commands
     assert(r.append('mykey', 'O') == 1)
     assert(r.append('mykey', 'K') == 2)
@@ -88,12 +91,12 @@ if strcmp('YES', str)
     
     if (exist('OCTAVE_VERSION', 'builtin') == 5)
         r = r.pipeline({'SET', 'KEYNAME', 'WHITE SPACE'});
-        r = r.pipeline({'SET', 'test1', 5});
+        r = r.pipeline({'SET', 'test1', '5'});
         r = r.execute();
         assert(strcmp('WHITE SPACE', r.get('KEYNAME')))
     else
         r = r.pipeline({'SET', 'KEYNAME', 'WHITE SPACE'});
-        r = r.pipeline({'SET', 'test1', 5});
+        r = r.pipeline({'SET', 'test1', '5'});
         r = r.execute();
         %% different numbers of cell arguments currently went wrong in octave       
         assert(strcmp('WHITE SPACE', r.get('KEYNAME')))
