@@ -129,7 +129,7 @@ e.g.
    * when number of commands in `pipeline` == `batchsize`, it automatically execute the `pipeline`.
  * `verboseCluster`
    * boolean
-   * default: false
+   * default: `false`
    * prints information when changing the instance in a cluster like `MOVED 6373 127.0.0.1:30002`
 
 #### private (can't be change during the session)
@@ -154,15 +154,15 @@ e.g.
 ### make a connection
 
     >> r = redis()
+    
+    r = 
+    
+      redis with properties:
+    
+             precision: 4
+            batchsize: 64
+       verboseCluster: 1
 
-	r =
-
-           hostname: '127.0.0.1'
-               port: 6379
-                 db: 0
-             passwd: ''
-          precision: 4
-          batchsize: 64
 
 ### ping the redis server
 
@@ -190,9 +190,10 @@ e.g.
   * return type of `GET*` commands will be a char or a double _(depends on the reply of hiredis)_
 
 ### INCR, DECR
-`r.incr(key)`
-`r.decr(key)`
+`r.incr(key)` `r.incrby(key, double)` `r.incrbyfloat(key, double)`
+`r.decr(key)` `r.decrby(key, double)`
 
+* `r.precision` will handle the decimal places for `*by...` command.
 * return type will be double.
 
         ret = r.incr('go-redis')
@@ -213,7 +214,7 @@ e.g.
              1
 
 ### MOVE
-`r.del(key, dbnr)`
+`r.move(key, dbnr)`
 
 * return will be true (1) or false (0)
 * `dbnr` can be a char `'1'` or a double `1`.
@@ -270,7 +271,7 @@ An array reply will be transformed into a cell array in Octave/Matlab.
 
 ### CLUSTER 
 
-`go-redis` support the redis-cluster automatically
+`go-redis` support the redis-cluster automatically (when the redis instance is a cluster).
 
         >> r = redis('127.0.0.1', 30001)
         
