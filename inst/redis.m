@@ -69,6 +69,13 @@ classdef redis < handle
         function delete(self)
             redis_('delete', self.objectHandle);
         end
+        
+        function self = changeDB(self, db)
+            if (db ~= self.db)
+                self.db = db;
+                self.objectHandle = redis_('new', self.hostname, self.port, self.db, self.passwd);
+            end
+        end % changeDB
 
         %% redis call command
         % for debugging and not directly supported redis functions
