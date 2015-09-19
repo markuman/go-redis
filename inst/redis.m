@@ -16,7 +16,7 @@ classdef redis < handle
     properties (SetAccess = private, Hidden = true)
         hostname
         port
-        db
+        dbnr
         passwd
         objectHandle; % Handle to the underlying C++ redis connection class instance
     end%properties
@@ -34,7 +34,7 @@ classdef redis < handle
         function self = redis(varargin)
             self.port            = 6379;
             self.hostname        = '127.0.0.1';
-            self.db              = 0;
+            self.dbnr              = 0;
             self.passwd          = '';
             self.precision       = 4;
             self.batchsize       = 64;
@@ -49,7 +49,7 @@ classdef redis < handle
                 self.port        = varargin{2};
             end
             if nargin >= 3
-                self.db          = varargin{3};
+                self.dbnr          = varargin{3};
             end
             if nargin >= 4
                 self.passwd      = varargin{4};
@@ -61,7 +61,7 @@ classdef redis < handle
                 self.batchsize   = varargin{6};
             end
             % create a new connection to the redis server
-            self.objectHandle = redis_('new', self.hostname, self.port, self.db, self.passwd);
+            self.objectHandle = redis_('new', self.hostname, self.port, self.dbnr, self.passwd);
 
         end%obj redis
 
@@ -70,10 +70,10 @@ classdef redis < handle
             redis_('delete', self.objectHandle);
         end
         
-        function self = changeDB(self, db)
-            if (db ~= self.db)
-                self.db = db;
-                self.objectHandle = redis_('new', self.hostname, self.port, self.db, self.passwd);
+        function self = db(self, newdbnr)
+            if (newdbnr ~= self.dbnr)
+                self.dbnr = newdbnr;
+                self.objectHandle = redis_('new', self.hostname, self.port, self.dbnr, self.passwd);
             end
         end % changeDB
 

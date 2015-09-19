@@ -37,9 +37,9 @@ if strcmp('YES', str)
     assert(r.exists('B_key') == 1)
     assert(r.move('B_key', 1) == 1)
     assert(r.exists('B_key') == 0)  
-    r = r.changeDB(1);
+    r = r.db(1);
     assert(r.exists('B_key') == 1)
-    r = r.changeDB(0);
+    r = r.db(0);
     % test append strlen and incr* decr* commands
     assert(r.append('mykey', 'O') == 1)
     assert(r.append('mykey', 'K') == 2)
