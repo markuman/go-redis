@@ -11,7 +11,8 @@ classdef redis < handle
     properties        
         precision
         batchsize
-    end%properties
+        verboseCluster
+    end % properties
     
     properties (SetAccess = private, Hidden = true)
         hostname
@@ -19,7 +20,7 @@ classdef redis < handle
         dbnr
         passwd
         objectHandle; % Handle to the underlying C++ redis connection class instance
-    end%properties
+    end % private hidden properties
 
     properties (Access = protected)
        swap
@@ -28,15 +29,17 @@ classdef redis < handle
        array_hash
        is_cluster
        is_octave
-    end
-
+    end % protected access
+    
     methods
 
         %% constructor - construct a new connection to the redis server
         function self = redis(varargin)
+            
+            % init class variables
             self.port            = 6379;
             self.hostname        = '127.0.0.1';
-            self.dbnr              = 0;
+            self.dbnr            = 0;
             self.passwd          = '';
             self.precision       = 4;
             self.batchsize       = 64;
@@ -45,7 +48,9 @@ classdef redis < handle
             self.gaussian_hash   = 'd27dd80c5140dc267180c03888ba933f8fa0324b';
             self.array_hash      = '91f730fc8f3613bd11019977f72ddd205b6d5f85';
             self.is_cluster      = false;
+            self.verboseCluster  = true;
             self.is_octave       = true;
+            
             if nargin >= 1
                 self.hostname    = varargin{1};
             end
@@ -53,7 +58,7 @@ classdef redis < handle
                 self.port        = varargin{2};
             end
             if nargin >= 3
-                self.dbnr          = varargin{3};
+                self.dbnr        = varargin{3};
             end
             if nargin >= 4
                 self.passwd      = varargin{4};
@@ -64,19 +69,24 @@ classdef redis < handle
             if nargin >= 6
                 self.batchsize   = varargin{6};
             end
+            
             % create a new connection to the redis server
             self.objectHandle = redis_('new', self.hostname, self.port, self.dbnr, self.passwd);
-
+            
+            % test connection
+            if ~strcmp('PONG', self.ping())
+                error('cannot ping the redis instance')
+            end
+            
+            % check if connected redis instance is a cluster
             tmp = self.call('CLUSTER INFO');
             if ~isempty(strfind(tmp, 'cluster_'))
                 self.is_cluster = true;
             end
             
-            if (exist('OCTAVE_VERSION', 'builtin') == 5) 
-                self.is_octave = true;
-            else
+            if (exist('OCTAVE_VERSION', 'builtin') ~= 5) 
                 self.is_octave = false;
-            end%if
+            end
             
         end%obj redis
 
@@ -85,6 +95,7 @@ classdef redis < handle
             redis_('delete', self.objectHandle);
         end
         
+        % change database number
         function self = db(self, newdbnr)
             if (newdbnr ~= self.dbnr)
                 self.dbnr = newdbnr;
@@ -92,6 +103,7 @@ classdef redis < handle
             end
         end % changeDB
         
+        % change connection to another redis instance in the cluster
         function newobjectHandle = move2cluster(self, newhost, newport)
             self.port           = newport;
             self.hostname       = newhost;
@@ -107,19 +119,16 @@ classdef redis < handle
             % than everything is whitespace-safe
 
             ret = redis_('command', self.objectHandle, command);
-            
+
             if self.is_cluster
-                if ~isempty(strfind(ret, 'MOVE'))
+                if ~isempty(strfind(ret, 'MOVED '))
+                    if (self.verboseCluster), disp(ret), end
                     newport = regexp(ret, ':(\d+)', 'tokens');
-                    newhost = regexp(ret, '.*? \d+ (.*?):', 'tokens');
-                    if (self.is_octave)
-                        port = str2double (cell2mat (newport));
-                        host = cell2mat (cell2mat( newhost));
-                    else
-                        port = str2double (newport{1});
-                        host = cell2mat (newhost{1});
-                    end
-                    self.objectHandle = self.move2cluster(host, port);
+                    newport = str2double (newport{1});
+                    newhost = regexp(ret, '.*? \d+ (.*?):', 'tokens');                    
+                    newhost = cell2mat (newhost{1});
+
+                    self.objectHandle = self.move2cluster(newhost, newport);
                     ret = self.call(command);
                 end                
             end
