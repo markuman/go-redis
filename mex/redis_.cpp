@@ -60,22 +60,20 @@ void mexFunction (int nlhs, mxArray *plhs[],
   //  command - send a redis command to the server
   if (!strcmp("new", instruction)) {
     // default stuff
-    const char *hostname  = "127.0.0.1";
+    char *hostname  = (char*)"127.0.0.1";
     port      = 6379;
     database  = 0;
-    const char *password  = "";
-    const char *key       = "";
-    const char *value     = "";
+    char *password  = (char*)"";
 
     // OPTIONAL: GET HOSTNAME
     if ( nrhs >= 2  ) {
       if ( mxIsChar(prhs[1]) ) {
-        char *hostname = (char *) mxCalloc(mxGetN(prhs[1])+1, sizeof(char));
+        hostname = (char *) mxCalloc(mxGetN(prhs[1])+1, sizeof(char));
         mxGetString(prhs[1], hostname, mxGetN(prhs[1])+1);
       } else {
         mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Error setting up redis connection: Hostname must be a string.");
       }
-      
+
     }
 
     // OPTIONAL: GET PORT
@@ -104,7 +102,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
     // OPTIONAL: GET PASSWORD
     if ( nrhs >= 5 ) {
       if ( mxIsChar(prhs[4]) ) {
-        char *password = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
+        password = (char *) mxCalloc(mxGetN(prhs[4])+1, sizeof(char));
         mxGetString(prhs[4], password, mxGetN(prhs[4])+1);
       } else {
         mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Error setting up redis connection: Password must be a string.");
@@ -227,7 +225,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
       mwIndex n;
       mwSize buflen;
       #ifdef DEBUG
-        mwSize m = mxGetNumberOfElements(prhs[nrhs - 1]); 
+        mwSize m = mxGetNumberOfElements(prhs[nrhs - 1]);
         mexPrintf("%d cols\n", mxGetN(prhs[nrhs - 1]));
         mexPrintf("%d rows\n", mxGetM(prhs[nrhs - 1]));
         mexPrintf("%d elements\n", m);
@@ -239,17 +237,17 @@ void mexFunction (int nlhs, mxArray *plhs[],
       if (rows > 1){
           // load the silverbullet
           for (int r = 1; r <= rows; r++){
-              
-              if (cols >= 1) {                             
+
+              if (cols >= 1) {
                   cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(1, r, rows) - 1);
                   buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
                   command = (char *)mxMalloc(buflen);
                   mxGetString(cell_element_ptr, command, buflen);
-              } 
+              }
 
               if (cols >= 2) {
                   cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(2, r, rows) - 1);
-                  
+
                   if (0 == cell_element_ptr) {
                       reduceCol++;
                   } else {
@@ -280,16 +278,16 @@ void mexFunction (int nlhs, mxArray *plhs[],
                 redisAppendCommand(c, "%s %s %s", command, key, value);
               }
               reduceCol = 0;
-              
+
           }
-          
+
           // fire the silverbullet
           for (n = 0; n < rows; n++) {
               redisGetReply(c, (void**)&reply);
               freeReplyObject(reply);
           }
           plhs[0] = mxCreateString("OK");
-          
+
       // SINGLE COMMAND, WHITESPACE SAFE
       } else {
 
