@@ -316,7 +316,7 @@ An array reply will be transformed into a cell array in Octave/Matlab.
 `r.pipeline(command)`
 `r.execute()`
 
-Using `r.pipeline` will speedup your writing commands 2-3x.
+Using `r.pipeline` will speedup your writing commands 2-4x.
 
 _But be aware, `pipeline()` is not implemented as a subclass! That means you have to put everything into a string by yourself at the moment._
 
@@ -354,10 +354,6 @@ So you just need to call `r.execute()` (Yes, it takes no arguments!) one time wh
 
 
 `command` can be a cell array too, like `r = r.pipeline({'INCR', 'A'}); r = r.pipeline({'INCR', 'A'});`.  
-But currently for GNU Octave the number of columns have to be the same for the pipeline session!  
-
-    r = pipeline({'SET', 'A', '0'});
-    r = pipeline({'INCR', 'A'}); % with matlab it's fine, with Octave currently not
 
 
 But you can pass a cell array of arguments too, to bypass the class functionality and its magic pipe execution.
