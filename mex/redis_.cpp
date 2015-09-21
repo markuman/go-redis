@@ -157,10 +157,14 @@ void mexFunction (int nlhs, mxArray *plhs[],
       mexErrMsgTxt("No redis connection supplied after delete instruction (expecting the handle)");
     }
 
-    // Destroy the C++ object
-    redisContext *c = convertMat2Ptr<redisContext>(prhs[1]);
-    redisFree(c);
-    destroyObject<redisContext>(prhs[1]);
+    // Safely destroy the C++ object
+    try {
+      redisContext *c = convertMat2Ptr<redisContext>(prhs[1]);
+      redisFree(c);
+      destroyObject<redisContext>(prhs[1]);
+    } catch (int e) {
+
+    }
     // Warn if other commands were ignored
     if (nlhs != 0 || nrhs != 2)
       mexWarnMsgTxt("Delete: Unexpected arguments ignored.");
