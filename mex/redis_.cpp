@@ -276,10 +276,16 @@ void mexFunction (int nlhs, mxArray *plhs[],
               #endif // DEBUG
               if ((cols - reduceCol) == 1) {
                 redisAppendCommand(c, command);
+                mxFree(command);
               } else if ((cols - reduceCol) == 2) {
                 redisAppendCommand(c, "%s %s", command, key);
+                mxFree(command);
+                mxFree(key);
               } else if ((cols - reduceCol) == 3) {
                 redisAppendCommand(c, "%s %s %s", command, key, value);
+                mxFree(command);
+                mxFree(key);
+                mxFree(value);
               }
               reduceCol = 0;
 
