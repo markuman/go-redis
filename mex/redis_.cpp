@@ -256,6 +256,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
                       reduceCol++;
                   } else {
                       buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                      if (1 >= buflen) { reduceCol++; }
                       key = (char *)mxMalloc(buflen);
                       mxGetString(cell_element_ptr, key, buflen);
                   }
@@ -267,6 +268,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
                       reduceCol++;
                   } else {
                       buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                      if (1 >= buflen) { reduceCol++; }
                       value = (char *)mxMalloc(buflen);
                       mxGetString(cell_element_ptr, value, buflen);
                   }

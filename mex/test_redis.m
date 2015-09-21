@@ -89,12 +89,6 @@ if strcmp('YES', str)
     r = r.execute();
     assert(str2double(r.get('M')) == 642)
     
-    if (exist('OCTAVE_VERSION', 'builtin') == 5)
-        r = r.pipeline({'SET', 'KEYNAME', 'WHITE SPACE'});
-        r = r.pipeline({'SET', 'test1', '5'});
-        r = r.execute();
-        assert(strcmp('WHITE SPACE', r.get('KEYNAME')))
-    else
         r = r.pipeline({'SET', 'KEYNAME', 'WHITE SPACE'});
         r = r.pipeline({'SET', 'test1', '5'});
         r = r.execute();
@@ -107,7 +101,6 @@ if strcmp('YES', str)
         r = r.execute();
         assert(str2double(r.get('THIS')) == 2)
         assert(OK(r.call('GET PIPELINE')))
-    end
     
 
     fprintf('\n everything passed\n')
