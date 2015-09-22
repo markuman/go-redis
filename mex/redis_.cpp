@@ -45,7 +45,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
   // --- input checks
   // currently we need at least more than two inputs and one ouput!!
   // improve me!!
-  if(nrhs < 1 && nlhs != 1) {
+  if (nrhs < 1 && nlhs != 1) {
     mexErrMsgIdAndTxt( "MATLAB:redis_:invalidNumInputs",
                       "One or more inputs are required.");
   }
@@ -250,25 +250,24 @@ void mexFunction (int nlhs, mxArray *plhs[],
               }
 
               if (cols >= 2) {
+              
                   cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(2, r, rows) - 1);
-
-                  if (0 == cell_element_ptr) {
+                  buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                  if (1 >= buflen) {
                       reduceCol++;
                   } else {
-                      buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-                      if (1 >= buflen) { reduceCol++; }
                       key = (char *)mxMalloc(buflen);
                       mxGetString(cell_element_ptr, key, buflen);
                   }
               }
 
               if (cols >= 3){
+              
                   cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(3, r, rows) - 1);
-                  if (0 == cell_element_ptr) {
+                  buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                  if (1 >= buflen) {
                       reduceCol++;
                   } else {
-                      buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-                      if (1 >= buflen) { reduceCol++; }
                       value = (char *)mxMalloc(buflen);
                       mxGetString(cell_element_ptr, value, buflen);
                   }
