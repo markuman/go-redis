@@ -88,20 +88,20 @@ if strcmp('YES', str)
     end
     r = r.execute();
     assert(str2double(r.get('M')) == 642)
-    
-        r = r.pipeline({'SET', 'KEYNAME', 'WHITE SPACE'});
-        r = r.pipeline({'SET', 'test1', '5'});
-        r = r.execute();
-        %% different numbers of cell arguments currently went wrong in octave       
-        assert(strcmp('WHITE SPACE', r.get('KEYNAME')))
-        r = r.pipeline('SET THIS 0');
-        r = r.pipeline('INCR THIS');
-        r = r.pipeline({'INCR', 'THIS'});
-        r = r.pipeline({'SET', 'PIPELINE', 'OK'});
-        r = r.execute();
-        assert(str2double(r.get('THIS')) == 2)
-        assert(OK(r.call('GET PIPELINE')))
-    
+
+   % test whitespace values in pipeline    
+    r = r.pipeline({'SET', 'KEYNAME', 'WHITE SPACE'});
+    r = r.pipeline({'SET', 'test1', '5'});
+    r = r.execute();
+    assert(strcmp('WHITE SPACE', r.get('KEYNAME')))
+    % test mixed input type in pipeline (char, 1x1 cell, 1x2 cell, 1x3 cell)
+    r = r.pipeline('SET THIS 0');
+    r = r.pipeline('INCR THIS');
+    r = r.pipeline({'INCR', 'THIS'});
+    r = r.pipeline({'SET', 'PIPELINE', 'OK'});
+    r = r.execute();
+    assert(str2double(r.get('THIS')) == 2)
+    assert(OK(r.get('PIPELINE')))
 
     fprintf('\n everything passed\n')
 end
