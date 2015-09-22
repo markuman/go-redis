@@ -36,7 +36,7 @@ char instruction[64];
 char *hostname, *command, *password, *key, *value, *opt1, *opt2;
 int port, database;
 char redisChar[19]; // afaik long enough for long long int
-mxArray *cell_array_ptr;
+mxArray *cell_array_ptr, *nested_cell_array;
 
 // matlab/octave mex function
 void mexFunction (int nlhs, mxArray *plhs[],
@@ -190,8 +190,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
       // call redis
       reply = (redisReply*)redisCommand(c, command);
 
-
-
+      
       // check the output
       if (reply->type == REDIS_REPLY_STRING) {
         #ifdef DEBUG
@@ -212,7 +211,17 @@ void mexFunction (int nlhs, mxArray *plhs[],
           #ifdef DEBUG
               mexPrintf("HIER %d\n", reply->element[j]->elements);
           #endif
-          mxSetCell(cell_array_ptr,j, mxCreateString(reply->element[j]->str));
+          if (0 == reply->element[j]->elements) {
+              mxSetCell(cell_array_ptr, j, mxCreateString(reply->element[j]->str));
+          } else {
+              // nested array
+              n = (int)floor(reply->element[j]->elements);
+              nested_cell_array = mxCreateCellMatrix(n,1);
+              for (unsigned int k = 0; k < reply->element[j]->elements; k++) {
+                mxSetCell(nested_cell_array, k, mxCreateString(reply->element[j]->element[k]->str));
+              }
+              mxSetCell(cell_array_ptr, j, nested_cell_array);
+          }
         }
         plhs[0] = cell_array_ptr;
 
@@ -237,8 +246,6 @@ void mexFunction (int nlhs, mxArray *plhs[],
       }
       // free redis
       freeReplyObject(reply);
-
-
 
     // 3) PIPELINE ---
     } else if ( mxIsCell(prhs[nrhs - 1]) ){
@@ -449,6 +456,7 @@ void mexFunction (int nlhs, mxArray *plhs[],
           }
 
           #ifdef DEBUG
+                mexPrintf("number of commands: %d\n", cols);
                 mexPrintf("%s %s %s %s %s\n", command, key, value, opt1, opt2);
           #endif // DEBUG
           // call redis
@@ -464,38 +472,63 @@ void mexFunction (int nlhs, mxArray *plhs[],
             reply = (redisReply*)redisCommand(c, "%s %s %s %s %s", command, key, value, opt1, opt2);
           }
 
-
-
           // check the output
           if (reply->type == REDIS_REPLY_STRING) {
+            #ifdef DEBUG
+                mexPrintf("REDIS REPLY STRING\n");
+            #endif
             plhs[0] = mxCreateString(reply->str);
+
           } else if (reply->type == REDIS_REPLY_ARRAY) {
+            #ifdef DEBUG
+                mexPrintf("REDIS REPLY ARRAY\n");
+            #endif
             // get number of elements
             int n = (int)floor(reply->elements);
             // outout will be a cell array matlab-sided
             cell_array_ptr = mxCreateCellMatrix(n,1);
 
             for (unsigned int j = 0; j < reply->elements; j++) {
-              //mexPrintf("%u) %s\n", j, reply->element[j]->str);
-              mxSetCell(cell_array_ptr,j, mxCreateString(reply->element[j]->str));
+              #ifdef DEBUG
+                  mexPrintf("HIER %d\n", reply->element[j]->elements);
+              #endif
+              if (0 == reply->element[j]->elements) {
+                  mxSetCell(cell_array_ptr, j, mxCreateString(reply->element[j]->str));
+              } else {
+                  // nested array
+                  n = (int)floor(reply->element[j]->elements);
+                  nested_cell_array = mxCreateCellMatrix(n,1);
+                  for (unsigned int k = 0; k < reply->element[j]->elements; k++) {
+                    mxSetCell(nested_cell_array, k, mxCreateString(reply->element[j]->element[k]->str));
+                  }
+                  mxSetCell(cell_array_ptr, j, nested_cell_array);
+              }
             }
-
-            // free hiredis
-            freeReplyObject(reply);
             plhs[0] = cell_array_ptr;
 
           } else if (reply->type == REDIS_REPLY_INTEGER) {
+            #ifdef DEBUG
+                mexPrintf("REDIS REPLY INTEGER\n");
+            #endif
             plhs[0] = mxCreateDoubleScalar(reply->integer);
 
-            // free redis
-            freeReplyObject(reply);
+          } else if (reply->type == REDIS_REPLY_STATUS) {
+            #ifdef DEBUG
+              mexPrintf("REDIS REPLY STATUS\n");
+            #endif
+            plhs[0] = mxCreateString(reply->str); 
+
           } else {
+            #ifdef DEBUG
+              mexPrintf("REDIS REPLY ??? DANGER!!!\n");
+            #endif
             // Laugh in the face of danger
             plhs[0] = mxCreateString(reply->str);
           }
+          // free redis
+          freeReplyObject(reply);
 
-
-      }
+          }
 
     } else {
       mexErrMsgIdAndTxt("MATLAB:redis_:nrhs", "Command Input must be a string.");
