@@ -92,13 +92,11 @@ e.g.
 
 # limitations
 
-* GNU Octave and Matlab
-  * `sscan`/nested cells as return are not supported yet
+* `pipeline()` can not handle cluster instances!
 
 * GNU Octave
   * there is a bug in classdef. You have to do `addpath private` in octave as a workaround! https://savannah.gnu.org/bugs/?41723
   * `inputname` is currently not supported in a classdef environment. So you have to name you array by yourself when using `array2redis`.
-
 
 
 ## basics
