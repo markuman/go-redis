@@ -252,24 +252,36 @@ void mexFunction (int nlhs, mxArray *plhs[],
               if (cols >= 2) {
               
                   cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(2, r, rows) - 1);
-                  buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-                  if (1 >= buflen) {
+                  // matlab check
+                  if (0 == cell_element_ptr)  {
                       reduceCol++;
                   } else {
-                      key = (char *)mxMalloc(buflen);
-                      mxGetString(cell_element_ptr, key, buflen);
+                      // octave check
+                      buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                      if (1 >= buflen) {
+                          reduceCol++;
+                      } else {
+                          key = (char *)mxMalloc(buflen);
+                          mxGetString(cell_element_ptr, key, buflen);
+                     }
                   }
               }
 
               if (cols >= 3){
               
                   cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(3, r, rows) - 1);
-                  buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
-                  if (1 >= buflen) {
+                  // matlab check
+                  if (0 == cell_element_ptr) {
                       reduceCol++;
                   } else {
-                      value = (char *)mxMalloc(buflen);
-                      mxGetString(cell_element_ptr, value, buflen);
+                      // octave check
+                      buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                      if (1 >= buflen) {
+                          reduceCol++;
+                      } else {
+                          value = (char *)mxMalloc(buflen);
+                          mxGetString(cell_element_ptr, value, buflen);
+                      }
                   }
               }
               #ifdef DEBUG
