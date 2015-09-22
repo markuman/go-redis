@@ -33,7 +33,7 @@
 // declarate some stuff
 char* redisReturn;
 char instruction[64];
-char *hostname, *command, *password, *key, *value;
+char *hostname, *command, *password, *key, *value, *opt1, *opt2;
 int port, database;
 char redisChar[19]; // afaik long enough for long long int
 mxArray *cell_array_ptr;
@@ -284,6 +284,43 @@ void mexFunction (int nlhs, mxArray *plhs[],
                       }
                   }
               }
+              
+              if (cols >= 4){
+              
+                  cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(4, r, rows) - 1);
+                  // matlab check
+                  if (0 == cell_element_ptr) {
+                      reduceCol++;
+                  } else {
+                      // octave check
+                      buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                      if (1 >= buflen) {
+                          reduceCol++;
+                      } else {
+                          opt1 = (char *)mxMalloc(buflen);
+                          mxGetString(cell_element_ptr, opt1, buflen);
+                      }
+                  }
+              }
+              
+              if (cols >= 5){
+              
+                  cell_element_ptr = mxGetCell(prhs[nrhs - 1], CMOindex(5, r, rows) - 1);
+                  // matlab check
+                  if (0 == cell_element_ptr) {
+                      reduceCol++;
+                  } else {
+                      // octave check
+                      buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+                      if (1 >= buflen) {
+                          reduceCol++;
+                      } else {
+                          opt2 = (char *)mxMalloc(buflen);
+                          mxGetString(cell_element_ptr, opt2, buflen);
+                      }
+                  }
+              }
+              
               #ifdef DEBUG
                 mexPrintf("pipeline: c %s k %s v %s\n", command, key, value);
               #endif // DEBUG
@@ -299,6 +336,19 @@ void mexFunction (int nlhs, mxArray *plhs[],
                 mxFree(command);
                 mxFree(key);
                 mxFree(value);
+              } else if ((cols - reduceCol) == 4) {
+                redisAppendCommand(c, "%s %s %s %s", command, key, value, opt1);
+                mxFree(command);
+                mxFree(key);
+                mxFree(value);
+                mxFree(opt1);
+              } else if ((cols - reduceCol) == 5) {
+                redisAppendCommand(c, "%s %s %s %s %s", command, key, value, opt1, opt2);
+                mxFree(command);
+                mxFree(key);
+                mxFree(value);
+                mxFree(opt1);
+                mxFree(opt2);
               }
               reduceCol = 0;
 
@@ -353,9 +403,35 @@ void mexFunction (int nlhs, mxArray *plhs[],
               #endif // DEBUG
 
           }
+          
+          if (cols >= 4){
+
+              cell_element_ptr = mxGetCell(prhs[nrhs - 1], 3);
+              buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+              opt1 = (char *)mxMalloc(buflen);
+              mxGetString(cell_element_ptr, opt1, buflen);
+
+              #ifdef DEBUG
+                mexPrintf("opt1: %s\n", opt1);
+              #endif // DEBUG
+
+          }
+          
+          if (cols >= 5){
+
+              cell_element_ptr = mxGetCell(prhs[nrhs - 1], 4);
+              buflen = mxGetN(cell_element_ptr)*sizeof(mxChar)+1;
+              opt2 = (char *)mxMalloc(buflen);
+              mxGetString(cell_element_ptr, opt2, buflen);
+
+              #ifdef DEBUG
+                mexPrintf("opt2: %s\n", opt2);
+              #endif // DEBUG
+
+          }
 
           #ifdef DEBUG
-                mexPrintf("%s %s %s\n", command, key, value);
+                mexPrintf("%s %s %s %s %s\n", command, key, value, opt1, opt2);
           #endif // DEBUG
           // call redis
           if (cols == 1) {
@@ -364,6 +440,10 @@ void mexFunction (int nlhs, mxArray *plhs[],
             reply = (redisReply*)redisCommand(c, "%s %s", command, key);
           } else if (cols == 3) {
             reply = (redisReply*)redisCommand(c, "%s %s %s", command, key, value);
+          } else if (cols == 4) {
+            reply = (redisReply*)redisCommand(c, "%s %s %s %s", command, key, value, opt1);
+          } else if (cols == 5) {
+            reply = (redisReply*)redisCommand(c, "%s %s %s %s %s", command, key, value, opt1, opt2);
           }
 
 

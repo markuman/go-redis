@@ -103,5 +103,13 @@ if strcmp('YES', str)
     assert(str2double(r.get('THIS')) == 2)
     assert(OK(r.get('PIPELINE')))
 
+    % test ZADD and ZRANGE
+    assert(r.call('ZADD list 1 some1') == 1)
+    assert(r.call({'ZADD' 'list' '2' 'some2'}) == 1)
+    assert(r.call('ZADD list 3 some3') == 1)
+    k = r.call({'ZRANGE' 'list' '0' '1' 'withscores'});
+    assert(strcmp('some11some22', [ k{:} ]))
+
+
     fprintf('\n everything passed\n')
 end
