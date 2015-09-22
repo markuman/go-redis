@@ -194,31 +194,49 @@ void mexFunction (int nlhs, mxArray *plhs[],
 
       // check the output
       if (reply->type == REDIS_REPLY_STRING) {
+        #ifdef DEBUG
+        	mexPrintf("REDIS REPLY STRING\n");
+        #endif
         plhs[0] = mxCreateString(reply->str);
+
       } else if (reply->type == REDIS_REPLY_ARRAY) {
+        #ifdef DEBUG
+        	mexPrintf("REDIS REPLY ARRAY\n");
+        #endif
         // get number of elements
         int n = (int)floor(reply->elements);
         // outout will be a cell array matlab-sided
         cell_array_ptr = mxCreateCellMatrix(n,1);
 
         for (unsigned int j = 0; j < reply->elements; j++) {
-          //mexPrintf("%u) %s\n", j, reply->element[j]->str);
+          #ifdef DEBUG
+              mexPrintf("HIER %d\n", reply->element[j]->elements);
+          #endif
           mxSetCell(cell_array_ptr,j, mxCreateString(reply->element[j]->str));
         }
-
-        // free hiredis
-        freeReplyObject(reply);
         plhs[0] = cell_array_ptr;
 
       } else if (reply->type == REDIS_REPLY_INTEGER) {
+        #ifdef DEBUG
+            mexPrintf("REDIS REPLY INTEGER\n");
+        #endif
         plhs[0] = mxCreateDoubleScalar(reply->integer);
 
-        // free redis
-        freeReplyObject(reply);
+      } else if (reply->type == REDIS_REPLY_STATUS) {
+        #ifdef DEBUG
+          mexPrintf("REDIS REPLY STATUS\n");
+        #endif
+        plhs[0] = mxCreateString(reply->str); 
+
       } else {
+        #ifdef DEBUG
+          mexPrintf("REDIS REPLY ??? DANGER!!!\n");
+        #endif
         // Laugh in the face of danger
         plhs[0] = mxCreateString(reply->str);
       }
+      // free redis
+      freeReplyObject(reply);
 
 
 
