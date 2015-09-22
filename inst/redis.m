@@ -79,9 +79,12 @@ classdef redis < handle
             end
             
             % check if connected redis instance is a cluster
-            tmp = self.call('CLUSTER INFO');
-            if ~isempty(strfind(tmp, 'cluster_'))
-                self.is_cluster = true;
+            tmp = self.call('INFO CLUSTER');
+            tmp = regexp(tmp, '\ncluster_enabled:(\d)', 'tokens');
+            if ~isempty(tmp) % redis version < 3
+                if (1 == str2double(tmp{1}))
+                    self.is_cluster = true;
+                end
             end
             
             if (exist('OCTAVE_VERSION', 'builtin') ~= 5) 
