@@ -261,6 +261,10 @@ classdef redis < handle
         %% TODO SUBCLASS
         function self = pipeline(self, command)
 
+            if self.is_cluster
+                error('currently pipeline() cannot handle commands for a cluster')
+            end
+
             if ischar(command)
                 self.count = self.count + 1;                
                 self.swap{self.count, 1} = command;
