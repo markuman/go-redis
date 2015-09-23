@@ -258,6 +258,63 @@ classdef redis < handle
             end
         end%type
 
+        %% LIST
+        function ret = llen(self, listname)
+            ret = self.call({'LLEN', listname});
+        end%LLEN
+
+        function ret = lpush(self, listname, value)
+            ret = self.call({'LPUSH', listname, value});
+        end%LPUSH
+
+        function ret = lindex(self, listname, index)
+            ret = self.call({'LPUSH', listname, num2str(index)});
+        end%LINDEX
+
+        function ret = linsert(self, listname, position, pivot, value)
+            ret = self.call({'LINSERT', listname, position, pivot, value});
+        end%LINSERT
+
+        function ret = lpop(self, listname)
+            ret = self.call({'LPOP', listname});
+        end%LPOP
+
+        function ret = lpush(self, listname, value)
+            ret = self.call({'LPUSH', listname, value});
+        end%LPUSH
+
+        function ret = lpushx(self, listname, value)
+            ret = self.call({'LPUSHX', listname, value});
+        end%LPUSHX
+
+        function ret = lrange(self, listname, start, stop)
+            ret = self.call({'LRANGE', listname, num2str(start), num2str(stop)});
+        end%LRANGE
+
+        function ret = lrem(self, listname, count, value)
+            ret = self.call({'LREM', listname, num2str(count), value});
+        end%LREM
+
+        function ret = lset(self, listname, index, value)
+            ret = self.call({'LSET', listname, num2str(index), value});
+        end%LSET
+
+        function ret = rpop(self, listname)
+            ret = self.call({'RPOP', listname});
+        end%RPOP
+
+        function ret = rpoplpush(self, source, destination)
+            ret = self.call({'RPOPLPUSH', source, destination});
+        end%RPOPLPUSH
+
+        function ret = rpush(self, listname, value)
+            ret = self.call({'RPUSH', listname, value});
+        end%RPUSH
+
+        function ret = rpushx(self, listname, value)
+            ret = self.call({'RPUSHX', listname, value});
+        end%RPUSHX
+
         %% TODO SUBCLASS
         function self = pipeline(self, command)
 

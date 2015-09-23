@@ -109,6 +109,16 @@ if strcmp('YES', str)
     assert(r.call('ZADD list 3 some3') == 1)
     k = r.call({'ZRANGE' 'list' '0' '1' 'withscores'});
     assert(strcmp('some11some22', [ k{:} ]))
+    
+    %% test list
+    assert(r.rpush('mylist', 'OK') == 1)
+    assert(r.rpush('mylist', 'world2') == 2)
+    assert(OK(r.lpop('mylist')))
+    assert(r.llen('mylist') == 1)
+    assert(r.lpushx('myotherlist', 'hello') == 0)
+    assert(r.lpush('mylist', 'hello') == 2)
+    
+
 
 
     fprintf('\n everything passed\n')
