@@ -262,6 +262,14 @@ classdef redis < handle
             end
         end%type
 
+        function ret = persist(self, keyname)
+            ret = self.call({'PERSIST', keyname});
+        end%PERSIST
+
+        function ret = expire(self, keyname, seconds)
+            ret = self.call({'EXPIRE', keyname, num2str(seconds)});
+        end%EXPIRE
+
         %% LIST
         function ret = llen(self, listname)
             ret = self.call({'LLEN', listname});
