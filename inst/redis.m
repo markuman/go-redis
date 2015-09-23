@@ -97,7 +97,11 @@ classdef redis < handle
         function delete(self)
             redis_('delete', self.objectHandle);
         end
-        
+
+        function quit(self)
+            redis_('delete', self.objectHandle);
+        end
+
         % change database number
         function self = db(self, newdbnr)
             if (newdbnr ~= self.dbnr)
