@@ -41,6 +41,8 @@ For more detailed information next to this `README.md`, take a look at the Wiki
         >> setup
         >> % go where ever you want and just do "addpath ('go-redis/inst')"
 
+The default path to hiredis is set to `/usr/include/hiredis`. You can change it by set a variable `LIBPATH` with a absolute path to hiredis before running the setup script.
+
 5. optional - run tests
 
 The `mex` folder contains a `test_redis.m` script with many `assert()` checks.
