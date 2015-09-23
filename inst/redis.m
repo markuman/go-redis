@@ -238,6 +238,14 @@ classdef redis < handle
             end
         end%rename
 
+        function ret = renamex(self, oldkeyname, newkeyname)
+            if ischar(oldkeyname) && ischar(newkeyname)
+                ret = self.call({'RENAMEX', oldkeyname, newkeyname});
+            else
+                error('keynames have to be chars')
+            end
+        end%renamex
+
         function ret = move(self, keyname, db)
             if ischar(keyname)
                 ret = self.call({'MOVE', keyname, num2str(db)});
