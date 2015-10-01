@@ -1,5 +1,6 @@
 # go-redis
 
+
 go-redis - **G**NU **O**ctave **redis** client
 
 ...but Matlab is supported too. When I don't support Matlab, someone else will do and I have to emulate it with Octave.
@@ -11,7 +12,8 @@ For more detailed information next to this `README.md`, take a look at the Wiki
 * [Data-Structure](https://github.com/markuman/go-redis/wiki/Data-Structure)
 * [Collaborative Workspace](https://github.com/markuman/go-redis/wiki/Collaborative-Workspace)
 * [Gaussian Elimination](https://github.com/markuman/go-redis/wiki/Gaussian-elimination)
-
+* Supports pipeline: ✓
+* Supports Redis-Cluster: ✓
 
 # Requirements
 
