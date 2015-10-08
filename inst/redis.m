@@ -299,10 +299,6 @@ classdef redis < handle
             ret = self.call({'LPOP', listname});
         end%LPOP
 
-        function ret = lpush(self, listname, value)
-            ret = self.call({'LPUSH', listname, value});
-        end%LPUSH
-
         function ret = lpushx(self, listname, value)
             ret = self.call({'LPUSHX', listname, value});
         end%LPUSHX
