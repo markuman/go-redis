@@ -1,12 +1,13 @@
 classdef redis < handle
     %redis mex client for Matlab and GNU Octave
     % r = redis()
-    % r = redis(hostname)
-    % r = redis(hostname, port)
-    % r = redis(hostname, port, db)
-    % r = redis(hostname, port, db, passwd)
-    % r = redis(hostname, port, db, passwd, precision)
-    % r = redis(hostname, port, db, passwd, precision, batchsize)
+    % r = redis('hostname', '127.0.0.1')
+    % r = redis('port', 6379)
+    % r = redis('dbnr', 0)
+    % r = redis('password', 'foobar')
+    % r = redis('precision', 16)
+    % r = redis('batchsize', 128)
+    % r = redis('hostname', 'some.domain', 'password', 'thisone')
 
     properties        
         precision
