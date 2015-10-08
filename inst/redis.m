@@ -288,7 +288,7 @@ classdef redis < handle
         end%LPUSH
 
         function ret = lindex(self, listname, index)
-            ret = self.call({'LPUSH', listname, num2str(index)});
+            ret = self.call({'LINDEX', listname, num2str(index)});
         end%LINDEX
 
         function ret = linsert(self, listname, position, pivot, value)
