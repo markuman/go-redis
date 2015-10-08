@@ -36,13 +36,27 @@ classdef redis < handle
         %% constructor - construct a new connection to the redis server
         function self = redis(varargin)
             
+            p               = inputParser();
+            p.CaseSensitive = true;
+            p.FunctionName  = 'redis'; 
+            % addParamValue is not recommended to use in matlab... however
+            % addParameter is not implemented in octave yet, so we've to
+            % use it
+            p.addParamValue ('port',        6379,           @isnumeric);
+            p.addParamValue ('hostname' ,   '127.0.0.1',    @ischar);
+            p.addParamValue ('dbnr',        0,              @isnumeric);
+            p.addParamValue ('password',    '',             @ischar);
+            p.addParamValue ('precision',   4,              @isnumeric);
+            p.addParamValue ('batchsize',   64,             @isnumeric);
+            p.parse (varargin{:});
+            
             % init class variables
-            self.port            = 6379;
-            self.hostname        = '127.0.0.1';
-            self.dbnr            = 0;
-            self.passwd          = '';
-            self.precision       = 4;
-            self.batchsize       = 64;
+            self.port            = p.Results.port;
+            self.hostname        = p.Results.hostname;
+            self.dbnr            = p.Results.dbnr;
+            self.passwd          = p.Results.password;
+            self.precision       = p.Results.precision;
+            self.batchsize       = p.Results.batchsize;
             self.swap            = cell(self.batchsize,1);
             self.count           = 0;
             self.gaussian_hash   = 'd27dd80c5140dc267180c03888ba933f8fa0324b';
@@ -50,26 +64,7 @@ classdef redis < handle
             self.is_cluster      = false;
             self.verboseCluster  = true;
             self.is_octave       = true;
-            
-            if nargin >= 1
-                self.hostname    = varargin{1};
-            end
-            if nargin >= 2
-                self.port        = varargin{2};
-            end
-            if nargin >= 3
-                self.dbnr        = varargin{3};
-            end
-            if nargin >= 4
-                self.passwd      = varargin{4};
-            end
-            if nargin >= 5
-                self.precision   = varargin{5};
-            end
-            if nargin >= 6
-                self.batchsize   = varargin{6};
-            end
-            
+          
             % create a new connection to the redis server
             self.objectHandle = redis_('new', self.hostname, self.port, self.dbnr, self.passwd);
             
