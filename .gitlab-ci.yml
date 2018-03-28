@@ -18,5 +18,5 @@ go-redis:
     - name: redis:alpine
       alias: redis
   script:
-    - cd go-redis/mex/
+    - cd mex/
     - octave -q gitlab-ci.m
