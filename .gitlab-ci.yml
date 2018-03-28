@@ -1,0 +1,22 @@
+image: docker pull registry.gitlab.com/markuman/dev/octave:4.2.0
+
+variables:
+  DOCKER_DRIVER: overlay
+
+stages:
+  - test
+
+before_script:
+- apk --update --no-cache add hiredis hiredis-dev
+
+go-redis:
+  stage: test
+  tags:
+    - docker
+    - shared
+  services:
+    - name: redis:alpine
+      alias: redis
+  script:
+    - cd go-redis/mex/
+    - octave -q gitlab-ci.m
