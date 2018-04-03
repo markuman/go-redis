@@ -8,6 +8,7 @@ stages:
 
 before_script:
 - apk --update --no-cache add hiredis hiredis-dev
+- cd mex/
 - wget https://raw.githubusercontent.com/markuman/mUnittest/master/mUnittest.m
 
 go-redis:
@@ -19,5 +20,4 @@ go-redis:
     - name: redis:alpine
       alias: redis
   script:
-    - cd mex/
     - octave-cli --eval 'quit(or(0, mUnittest("gitlabci")))'
