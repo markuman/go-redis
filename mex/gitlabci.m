@@ -8,7 +8,7 @@ addpath('../inst/')
 addpath('../inst/private')
 r = redis('hostname', 'redis');
 % test basics
-assert(strcmp('PONG',r.ping()),
+assert(strcmp('fail',r.ping()),
   'ping redis server')
 assert(OK(r.call('flushall')),
   'flush database')
