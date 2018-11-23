@@ -9,7 +9,7 @@ stages:
 before_script:
 - apk --update --no-cache add hiredis hiredis-dev
 - cd mex/
-- wget https://raw.githubusercontent.com/markuman/mUnittest/master/mUnittest.m
+- wget https://git.osuv.de/m/mUnittest/raw/branch/master/mUnittest.m
 
 go-redis:
   stage: test
