@@ -27,7 +27,7 @@ pages:
   image: registry.gitlab.com/markuman/dotfiles/mdbooks:latest
   stage: deploy
   script:
-  - cd docs && mdbook build && cd ..
+  - cd docs && /root/.cargo/bin/mdbook build && cd ..
   - mv docs/book/ public
   tags:
     - docker
