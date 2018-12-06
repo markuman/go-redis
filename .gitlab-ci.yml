@@ -7,11 +7,6 @@ stages:
   - test
   - deploy
 
-before_script:
-- apk --update --no-cache add hiredis hiredis-dev
-- cd mex/
-- wget https://git.osuv.de/m/mUnittest/raw/branch/master/mUnittest.m
-
 go-redis:
   stage: test
   tags:
@@ -21,6 +16,9 @@ go-redis:
     - name: redis:alpine
       alias: redis
   script:
+    - apk --update --no-cache add hiredis hiredis-dev
+    - cd mex/
+    - wget https://git.osuv.de/m/mUnittest/raw/branch/master/mUnittest.m
     - octave-cli --eval 'quit(or(0, mUnittest("gitlabci")))'
 
 pages:
