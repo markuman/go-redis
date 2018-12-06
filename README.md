@@ -11,4 +11,4 @@ go-redis - **G**NU **O**ctave **redis** client
 
 Tested with Linux and Mac OS X.
 
-For more detailed information, take a look at the [docs/src/](src/branch/master/docs/src) folder or at [the online documentation](https://markuman.gitlab.io/go-redis/)
+For more detailed information, take a look at the [docs/src/](docs/src) folder or at [the online documentation](https://markuman.gitlab.io/go-redis/)
