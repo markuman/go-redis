@@ -1,0 +1,6 @@
+[book]
+authors = ["Markus Bergholz"]
+multilingual = false
+src = "src"
+title = "GNU Octave Redis Client"
+
