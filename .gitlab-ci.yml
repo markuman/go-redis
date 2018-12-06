@@ -5,6 +5,7 @@ variables:
 
 stages:
   - test
+  - deploy
 
 before_script:
 - apk --update --no-cache add hiredis hiredis-dev
@@ -21,3 +22,20 @@ go-redis:
       alias: redis
   script:
     - octave-cli --eval 'quit(or(0, mUnittest("gitlabci")))'
+
+pages:
+  image: registry.gitlab.com/markuman/dotfiles/mdbooks:latest
+  stage: deploy
+  script:
+  - mkdir .public
+  - cd docs && mdbook build
+  - cp -r docs/book/* .public
+  - mv .public public
+  tags:
+    - docker
+    - shared
+  artifacts:
+    paths:
+    - public
+  only:
+  - master
