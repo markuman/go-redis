@@ -42,13 +42,3 @@ With `redis2array` you can read back the array to Matlab/Octave.
 
 When you've just need a range of your array, you can simply use `range2array`. But take care, it only support 2D and 3D arrays!
 
-```mermaid
-graph TB
-    elb-->varnish
-    subgraph lekker-web-container
-    varnish["varnish Port 80"]-->apache2["apache2 Port 8080"]
-    apache2-->php_sulu
-    end
-    php_sulu-->rds
-    php_sulu-->efs
-```
