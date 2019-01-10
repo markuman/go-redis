@@ -3,7 +3,8 @@
 [![pipeline status](https://gitlab.com/markuman/go-redis/badges/master/pipeline.svg)](https://gitlab.com/markuman/go-redis/commits/master)
 
 * https://git.osuv.de/m/go-redis/
-* Mirror: https://gitlab.com/markuman/go-redis/
+* Pull Mirror: https://gitlab.com/markuman/go-redis/
+* Push Mirror: https://github.com/markuman/go-redis/
 
 go-redis - **G**NU **O**ctave **redis** client
 
