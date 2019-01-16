@@ -7,3 +7,6 @@ build:
 
 test:
 	echo "YES" | octave-cli --eval 'quit(or(0, mUnittest("test_redis")))'
+
+gitlab_ci_test:
+	echo "YES" | octave-cli --eval 'quit(or(0, mUnittest("gitlabci")))'

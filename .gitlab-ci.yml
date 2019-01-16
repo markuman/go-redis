@@ -16,9 +16,9 @@ go-redis:
     - name: redis:alpine
       alias: redis
   script:
-    - apk --update --no-cache add hiredis hiredis-dev
-    - cd mex/
-    - octave-cli --eval 'quit(or(0, mUnittest("gitlabci")))'
+    - apk --update --no-cache add hiredis hiredis-dev make
+    - make build -C mex/
+    - make gitlab_ci_test -C mex/
 
 pages:
   image: registry.gitlab.com/markuman/dotfiles/mdbooks:latest
