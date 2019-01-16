@@ -9,7 +9,6 @@ if strcmp('YES', str)
     OK = @(x) strcmp('OK', x);
 
     %% testing redis() class
-    setup
     addpath('../inst/')
     r = redis();
     % test basics
