@@ -18,7 +18,6 @@ go-redis:
   script:
     - apk --update --no-cache add hiredis hiredis-dev
     - cd mex/
-    - wget https://git.osuv.de/m/mUnittest/raw/branch/master/mUnittest.m
     - octave-cli --eval 'quit(or(0, mUnittest("gitlabci")))'
 
 pages:
