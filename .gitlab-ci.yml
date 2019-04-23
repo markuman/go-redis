@@ -16,7 +16,7 @@ go-redis:
     - name: redis:alpine
       alias: redis
   script:
-    - apt install libhiredis-dev libhiredis0.13 -y
+    - apt update && apt install libhiredis-dev libhiredis0.13 -y
     - make gitlab_build -C mex/
     - make gitlab_ci_test -C mex/
 
