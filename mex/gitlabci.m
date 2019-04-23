@@ -3,9 +3,7 @@
 OK = @(x) strcmp('OK', x);
 
 %% testing redis() class
-setup
 addpath('../inst/')
-addpath('../inst/private')
 r = redis('hostname', 'redis');
 % test basics
 assert(strcmp('PONG',r.ping()),

@@ -11,7 +11,7 @@ if (exist('OCTAVE_VERSION', 'builtin') == 5)
     %% setup for octave follows here
     if isunix
         try
-            eval(['mkoctfile -lhiredis -I' LIBPATH ' --mex -fPIC -O3 -pedantic -std=c++11 -g redis_.cpp -o redis_.mex -o ../inst/redis_.mex'])
+            eval(['mkoctfile -lhiredis -I'LIBPATH ' --mex -fPIC -O3 -pedantic -std=c++11 -g redis_.cpp -o redis_.mex -o ../inst/redis_.mex'])
         catch
             error('something went wrong\n Make sure you''ve installes octave dev tools and hiredis')
         end%try
